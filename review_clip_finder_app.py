@@ -32,6 +32,7 @@ if "translated_terms" not in st.session_state:
 def clear_data():
     st.session_state["keyword"] = ""
     st.session_state["translated_terms"] = {}
+    st.experimental_rerun()  # Refresh the page to reset the input field
 
 def translate_keyword():
     if st.session_state["keyword"].strip() != "":
