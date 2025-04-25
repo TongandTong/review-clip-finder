@@ -1,79 +1,120 @@
 import streamlit as st
-from deep_translator import GoogleTranslator
-import json
+import csv
 import os
-from datetime import datetime
+import webbrowser
+from googletrans import Translator
 
-# ------------------------ Configuration ------------------------
-st.set_page_config(page_title="Review Clip Finder", layout="centered")
+translator = Translator()
 
-DATA_FILE = "saved_links.json"
-PLATFORMS = ["YouTube", "TikTok", "Facebook", "Instagram", "Twitter"]
+PLATFORMS = [
+    {"name": "Douyin", "lang": "zh-cn", "search_url": "https://www.douyin.com/search/", "download": "https://savetik.co/en/douyin-downloader"},
+    {"name": "Xiaohongshu", "lang": "zh-cn", "search_url": "https://www.xiaohongshu.com/search_result/", "download": "https://bravedown.com/xiaohongshu-downloader"},
+    {"name": "Pinterest", "lang": "en", "search_url": "https://www.pinterest.com/search/pins/?q=", "download": "https://pinterestdownloader.com/"},
+    {"name": "Bilibili", "lang": "zh-cn", "search_url": "https://search.bilibili.com/all?keyword=", "download": "https://bravedown.com/th/bilibili-downloader"},
+    {"name": "Weibo", "lang": "zh-cn", "search_url": "https://s.weibo.com/weibo?q=", "download": "https://bravedown.com/th/weibo-video-downloader"},
+    {"name": "YouTube", "lang": "en", "search_url": "https://www.youtube.com/results?search_query=", "download": "https://en1.savefrom.net/1-youtube-video-downloader-8jH/"},
+    {"name": "TikTok", "lang": "th", "search_url": "https://www.tiktok.com/search?q=", "download": "https://snaptik.app/en2"},
+    {"name": "Instagram", "lang": "en", "search_url": "https://www.instagram.com/explore/tags/", "download": "https://snapins.ai/"},
+    {"name": "Zhihu", "lang": "zh-cn", "search_url": "https://www.zhihu.com/search?q=", "download": "https://www.videofk.com/zhihu-video-download"},
+    {"name": "Youku", "lang": "zh-cn", "search_url": "https://so.youku.com/search_video/q_", "download": "https://www.locoloader.com/youku-video-downloader/"},
+    {"name": "Dailymotion", "lang": "en", "search_url": "https://www.dailymotion.com/search/", "download": "https://www.savethevideo.com/dailymotion-downloader"}
+]
+
+SAVED_FILE = "saved_links.csv"
+
+# --- Utils ---
+def translate_text(text, lang):
+    try:
+        return translator.translate(text, dest=lang).text
+    except:
+        return text
+
+def save_link(platform, keyword, link):
+    with open(SAVED_FILE, "a", newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([platform, keyword, link])
 
 def load_saved_links():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+    if not os.path.exists(SAVED_FILE):
+        return []
+    with open(SAVED_FILE, newline='', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        return [dict(platform=row[0], keyword=row[1], link=row[2]) for row in reader if row]
 
-def save_links(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+def delete_link(index):
+    links = load_saved_links()
+    if index < len(links):
+        links.pop(index)
+        with open(SAVED_FILE, "w", newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            for item in links:
+                writer.writerow([item['platform'], item['keyword'], item['link']])
 
-# ------------------------ UI Design ------------------------
-st.title("🎬 Review Clip Finder")
-st.markdown("### Find and Save Review Clips")
+# --- UI ---
+st.set_page_config(page_title="Review Clip Finder", layout="centered")
+st.title("📽️ Review Clip Finder")
 
-platform = st.selectbox("Platform", PLATFORMS)
-user_input = st.text_input("Search Term (Thai or English)")
+query = st.text_input("Search Keyword (Thai)", max_chars=100)
+platform_names = [p['name'] for p in PLATFORMS]
+selected_platform_name = st.selectbox("Choose Platform", platform_names)
+selected_platform = next(p for p in PLATFORMS if p['name'] == selected_platform_name)
 
-if user_input:
-    try:
-        translated = GoogleTranslator(source='auto', target='en').translate(user_input)
-    except Exception as e:
-        translated = user_input
-        st.warning("Translation failed, using original text.")
+mode = st.radio("Search Mode", ["Original (Thai)", "Translated"])
 
-    editable_translation = st.text_input("English Translation", translated)
+if st.button("🔍 Search"):
+    search_term = query
+    if mode == "Translated":
+        search_term = translate_text(query, selected_platform['lang'])
+    search_url = selected_platform['search_url'] + search_term
+    st.markdown(f"[🌐 Open Search Link]({search_url})", unsafe_allow_html=True)
 
-    search_query = f"{platform} {editable_translation} review"
-    st.markdown(f"🔍 **Final Query:** `{search_query}`")
+    st.session_state['translated'] = search_term
 
-    if st.button("Search on Web"):
-        st.markdown(f"[Click to Search](https://www.google.com/search?q={search_query.replace(' ', '+')})")
-
-    if st.button("Save this Query"):
-        data = load_saved_links()
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        data[timestamp] = {
-            "platform": platform,
-            "original": user_input,
-            "translated": editable_translation,
-            "query": search_query
-        }
-        save_links(data)
-        st.success("Saved successfully!")
-
-# ------------------------ Link Management ------------------------
-st.markdown("---")
-st.subheader("📁 Saved Search Queries")
-
-data = load_saved_links()
-if not data:
-    st.info("No saved queries yet.")
+# Auto-translate but editable
+if 'translated' in st.session_state:
+    edited = st.text_input("Edit Translated (Optional)", value=st.session_state['translated'])
 else:
-    for key in sorted(data.keys(), reverse=True):
-        entry = data[key]
-        with st.expander(f"[{entry['platform']}] {entry['original']} → {entry['translated']}"):
-            st.code(entry["query"])
-            col1, col2 = st.columns([1, 1])
+    edited = ""
+
+link_input = st.text_input("Paste the Video Link")
+
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("💾 Save Link"):
+        if link_input:
+            save_link(selected_platform_name, edited or query, link_input)
+            st.success("Saved successfully!")
+        else:
+            st.warning("Please paste a link before saving.")
+
+with col2:
+    if st.button("📂 View Saved Links"):
+        st.session_state['show_links'] = True
+
+# --- Saved Links ---
+if st.session_state.get('show_links'):
+    st.subheader("🔗 Saved Links")
+    links = load_saved_links()
+    if not links:
+        st.info("No saved links yet.")
+    else:
+        for i, entry in enumerate(links):
+            st.markdown(f"**Platform:** {entry['platform']}  ")
+            st.markdown(f"**Keyword:** {entry['keyword']}  ")
+            st.markdown(f"**Link:** {entry['link']}  ")
+            search_url = next(p['search_url'] for p in PLATFORMS if p['name'] == entry['platform'])
+            download_url = next(p['download'] for p in PLATFORMS if p['name'] == entry['platform'])
+
+            col1, col2, col3 = st.columns([2,2,1])
             with col1:
-                if st.button(f"🌐 Search ({key})", key=f"search_{key}"):
-                    search_url = f"https://www.google.com/search?q={entry['query'].replace(' ', '+')}"
-                    st.markdown(f"[Open Search]({search_url})", unsafe_allow_html=True)
+                st.markdown(f"[🌐 Search Again]({search_url + entry['keyword']})", unsafe_allow_html=True)
             with col2:
-                if st.button(f"🗑️ Delete ({key})", key=f"delete_{key}"):
-                    del data[key]
-                    save_links(data)
-                    st.warning("Deleted. Please refresh the app.")
-                    st.experimental_rerun()
+                st.markdown(f"[⬇️ Go to Download Page]({download_url})", unsafe_allow_html=True)
+            with col3:
+                if st.button("🗑️ Delete", key=f"delete_{i}"):
+                    delete_link(i)
+                    st.rerun()
+
+# --- Footer ---
+st.markdown("---")
+st.markdown("Made with ❤️ to find your review clips faster")
