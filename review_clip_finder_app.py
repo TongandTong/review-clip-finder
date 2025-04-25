@@ -3,7 +3,6 @@ import webbrowser
 from googletrans import Translator
 import json
 import os
-import openai
 
 translator = Translator()
 
@@ -39,30 +38,9 @@ st.markdown("""
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
-if "suggestions" not in st.session_state:
-    st.session_state["suggestions"] = []
-
-openai.api_key = os.getenv("OPENAI_API_KEY", "sk-xxx")
-
-def get_ai_suggestions(keyword):
-    try:
-        prompt = f"แนะนำคำค้นเพิ่มเติมที่เกี่ยวข้องกับ '{keyword}' อย่างสั้นๆ 3 คำ"
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=50,
-            temperature=0.7,
-        )
-        suggestions = response['choices'][0]['message']['content'].strip().split(',')
-        return [s.strip() for s in suggestions if s.strip()]
-    except Exception as e:
-        return []
-
 def run_search():
     keyword = st.session_state["keyword_input"]
     st.session_state["keyword"] = keyword
-    if not st.session_state["suggestions"]:
-        st.session_state["suggestions"] = get_ai_suggestions(keyword) if keyword else []
 
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
@@ -82,16 +60,6 @@ if st.session_state["keyword"]:
         except Exception as e:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
-
-if st.session_state["suggestions"]:
-    st.markdown("### ✨ คำแนะนำเพิ่มเติม")
-    sugg_cols = st.columns(len(st.session_state["suggestions"]))
-    for i, suggestion in enumerate(st.session_state["suggestions"]):
-        if sugg_cols[i].button(suggestion, key=f"sugg_{i}"):
-            st.session_state["keyword_input"] += " " + suggestion
-            st.session_state["suggestions"] = []
-            run_search()
-            st.experimental_rerun()
 
 columns = st.columns(2)
 half = len(platforms) // 2
