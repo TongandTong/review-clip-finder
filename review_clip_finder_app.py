@@ -1,6 +1,8 @@
 import streamlit as st
 import webbrowser
 from googletrans import Translator
+import json
+import os
 
 translator = Translator()
 
@@ -33,21 +35,29 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Session state
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
+if "just_updated" not in st.session_state:
+    st.session_state["just_updated"] = False
 
+# Input Section
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
     st.markdown("### 🔍 คำค้น (ไทย)")
-
     keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
 
     if keyword != st.session_state["keyword"]:
         st.session_state["keyword"] = keyword
+        st.session_state["just_updated"] = True
         st.experimental_rerun()
-
     st.markdown("</div>", unsafe_allow_html=True)
 
+# Reset update flag
+if st.session_state.get("just_updated", False):
+    st.session_state["just_updated"] = False
+
+# Translation
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
@@ -57,6 +67,7 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
+# Display per platform
 columns = st.columns(2)
 half = len(platforms) // 2
 
