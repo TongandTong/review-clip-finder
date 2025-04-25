@@ -42,8 +42,7 @@ if "keyword" not in st.session_state:
 if "suggestions" not in st.session_state:
     st.session_state["suggestions"] = []
 
-# GPT API Key (replace with your actual key or set via env var)
-openai.api_key = os.getenv("OPENAI_API_KEY", "sk-xxx")  # เปลี่ยน "sk-xxx" เป็น API Key ของคุณ
+openai.api_key = os.getenv("OPENAI_API_KEY", "sk-xxx")
 
 def get_ai_suggestions(keyword):
     try:
@@ -59,19 +58,21 @@ def get_ai_suggestions(keyword):
     except Exception as e:
         return []
 
-def on_input_change():
+def run_search():
     keyword = st.session_state["keyword_input"]
-    st.session_state["suggestions"] = get_ai_suggestions(keyword)
+    st.session_state["keyword"] = keyword
+    st.session_state["suggestions"] = get_ai_suggestions(keyword) if keyword else []
 
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
     st.markdown("### 🔍 คำค้น (ไทย)")
-    keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input", on_change=on_input_change)
+    with st.form(key="search_form"):
+        keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
+        submitted = st.form_submit_button("ค้นหา")
+        if submitted:
+            run_search()
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.session_state["keyword"] = keyword
-
-# แปลคำไปยังภาษาของแต่ละแพลตฟอร์ม
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
@@ -81,16 +82,15 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# ปุ่มคำแนะนำ (แนวนอน)
 if st.session_state["suggestions"]:
-    cols = st.columns(len(st.session_state["suggestions"]))
+    st.markdown("### ✨ คำแนะนำเพิ่มเติม")
+    sugg_cols = st.columns(len(st.session_state["suggestions"]))
     for i, suggestion in enumerate(st.session_state["suggestions"]):
-        if cols[i].button(suggestion, key=f"sugg_{suggestion}"):
+        if sugg_cols[i].button(suggestion, key=f"sugg_{i}"):
             st.session_state["keyword_input"] += " " + suggestion
-            st.session_state["suggestions"] = []
+            run_search()
             st.experimental_rerun()
 
-# UI แสดงแพลตฟอร์ม
 columns = st.columns(2)
 half = len(platforms) // 2
 
