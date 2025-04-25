@@ -1,8 +1,8 @@
 import streamlit as st
-from googletrans import Translator
 import csv
-import os
 import webbrowser
+import os
+from googletrans import Translator
 
 translator = Translator()
 
@@ -21,71 +21,48 @@ platforms = [
     {"name": "X", "lang": "en", "search_url": "https://www.x.com/search?q=", "download": "https://ssstwitter.com/th"}
 ]
 
-saved_file = "saved_links.csv"
+st.set_page_config(layout="wide")
+st.title("🔍 Review Clip Finder")
 
-def translate_text(text, lang):
-    try:
-        result = translator.translate(text, dest=lang)
-        return result.text
-    except Exception as e:
-        return f"แปลไม่ได้: {e}"
-
-st.set_page_config(page_title="Review Clip Finder", layout="wide")
-
-# --- Custom CSS ---
-st.markdown("""
-    <style>
-        .input-container {
-            border: 1px solid #ccc;
-            padding: 1rem;
-            border-radius: 10px;
-            background-color: #fafafa;
-            margin-bottom: 2rem;
-        }
-        .platform-box {
-            border: 1px solid #ccc;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            background-color: #ffffff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .stButton>button {
-            margin: 0.2rem 0.2rem 0.2rem 0;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- Input Section ---
+# ------------------ Input Area ------------------ #
 with st.container():
-    st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    st.markdown("### 🔍 คำค้น (ไทย)")
-    query_text = st.text_input("ใส่คำค้น", key="main_query", label_visibility="collapsed")
-    st.markdown("</div>", unsafe_allow_html=True)
+    with st.container():
+        st.markdown("### 📌 คำค้น")
+        search_keyword = st.text_input("กรอกคำค้นหาภาษาไทย", "")
+        if "translations" not in st.session_state:
+            st.session_state.translations = {}
 
-# --- Platform Grid ---
-col1, col2 = st.columns(2)
+        if st.button("แปลทั้งหมด"):
+            for plat in platforms:
+                lang = plat["lang"]
+                try:
+                    translated = translator.translate(search_keyword, dest=lang).text
+                except Exception as e:
+                    translated = f"[แปลไม่ได้: {e}]"
+                st.session_state.translations[plat["name"]] = translated
+            st.success("แปลสำเร็จแล้ว")
 
-for i, platform in enumerate(platforms):
-    with (col1 if i % 2 == 0 else col2):
-        with st.container():
-            with st.expander(platform["name"]):
-                st.markdown('<div class="platform-box">', unsafe_allow_html=True)
+# ------------------ Platforms Area ------------------ #
+cols = st.columns(2)
+half = len(platforms) // 2 + len(platforms) % 2
 
-                lang = platform["lang"]
-                translated_text = translate_text(query_text, lang) if query_text else ""
-                trans_input = st.text_input(f"คำค้นสำหรับ {platform['name']}", value=translated_text, key=f"trans_{i}")
+for col_idx, plat_list in enumerate([platforms[:half], platforms[half:]]):
+    with cols[col_idx]:
+        for plat in plat_list:
+            with st.expander(plat["name"], expanded=False):
+                translated_text = st.session_state.translations.get(plat["name"], "")
+                st.write("🔁 คำที่แปล:", translated_text)
 
-                col_search, col_download = st.columns(2)
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    if st.button(f"ค้นหาใน {plat['name']}", key=f"search_{plat['name']}"):
+                        final_query = translated_text if translated_text else search_keyword
+                        search_url = plat["search_url"] + final_query
+                        js = f"window.open('{search_url}')"
+                        st.components.v1.html(f"<script>{js}</script>", height=0)
 
-                with col_search:
-                    if st.button("🔎 ค้นหา", key=f"search_{i}"):
-                        search_url = platform["search_url"] + trans_input
-                        st.markdown(f"[🔗 เปิดลิงก์ค้นหา]({search_url})", unsafe_allow_html=True)
-
-                with col_download:
-                    if st.button("⬇️ ไปหน้าโหลด", key=f"download_{i}"):
-                        download_url = platform["download"]
-                        st.markdown(f"[🔗 เปิดหน้าโหลด]({download_url})", unsafe_allow_html=True)
-
-                st.markdown('</div>', unsafe_allow_html=True)
+                with col2:
+                    if st.button(f"ไปหน้าโหลด {plat['name']}", key=f"download_{plat['name']}"):
+                        download_url = plat["download"]
+                        js = f"window.open('{download_url}')"
+                        st.components.v1.html(f"<script>{js}</script>", height=0)
