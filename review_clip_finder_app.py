@@ -23,13 +23,6 @@ platforms = [
     {"name": "X", "lang": "en", "search_url": "https://www.x.com/search?q=", "download": "https://ssstwitter.com/th"},
 ]
 
-# Load or initialize search history
-if os.path.exists(HISTORY_FILE):
-    with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-        history = json.load(f)
-else:
-    history = []
-
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
@@ -41,12 +34,13 @@ st.markdown("""
     padding: 15px;
     margin-bottom: 20px;
 }
-.tag {
+.suggestion-btn {
     display: inline-block;
     background-color: #eee;
-    border-radius: 20px;
+    border: none;
+    border-radius: 10px;
     padding: 5px 10px;
-    margin: 3px;
+    margin: 5px 5px 0 0;
     cursor: pointer;
 }
 </style>
@@ -68,12 +62,9 @@ with st.container():
     keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    if keyword:
+    if keyword and keyword != st.session_state["keyword"]:
         st.session_state["keyword"] = keyword
-        if keyword not in history:
-            history.insert(0, keyword)
-            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-                json.dump(history[:10], f, ensure_ascii=False)
+        st.experimental_rerun()
 
 # แปลคำค้นทันทีเมื่อพิมพ์
 translated_terms = {}
@@ -85,13 +76,15 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แนะนำคำค้นด้านล่าง
-if st.session_state["keyword"] in suggestion_map:
-    suggestions = suggestion_map[st.session_state["keyword"]]
-    selected_suggestion = st.selectbox("คำแนะนำที่เกี่ยวข้อง:", ["เลือกคำแนะนำ"] + suggestions)
-    if selected_suggestion != "เลือกคำแนะนำ":
-        st.session_state["keyword"] = selected_suggestion
-        st.rerun()
+# แสดงปุ่มคำแนะนำ
+suggestions = suggestion_map.get(st.session_state["keyword"], [])
+if suggestions:
+    st.markdown("<div style='margin-top: -10px;'>", unsafe_allow_html=True)
+    for s in suggestions:
+        if st.button(s, key=f"sugg_{s}"):
+            st.session_state["keyword"] += " " + s
+            st.experimental_rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 columns = st.columns(2)
 half = len(platforms) // 2
@@ -114,4 +107,3 @@ for col_idx, start in enumerate([0, half]):
                     if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
                         js = f"window.open('{plat['download']}')"
                         st.components.v1.html(f"<script>{js}</script>", height=0)
-
