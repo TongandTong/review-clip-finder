@@ -1,8 +1,6 @@
 import streamlit as st
 import webbrowser
 from googletrans import Translator
-import json
-import os
 
 translator = Translator()
 
@@ -39,17 +37,20 @@ if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
 def run_search():
-    keyword = st.session_state["keyword_input"]
-    st.session_state["keyword"] = keyword
+    st.session_state["keyword"] = st.session_state["keyword_input"]
 
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
     st.markdown("### 🔍 คำค้น (ไทย)")
-    with st.form(key="search_form"):
-        keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
-        submitted = st.form_submit_button("ค้นหา")
-        if submitted:
-            run_search()
+
+    st.text_input(
+        "พิมพ์คำค้นหาแล้วกด Enter",
+        value=st.session_state["keyword"],
+        label_visibility="collapsed",
+        key="keyword_input",
+        on_change=run_search  # ✅ กด Enter แล้วแปลทันที
+    )
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 translated_terms = {}
