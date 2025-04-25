@@ -24,28 +24,29 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-# 1. Session init
+# Session init
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 if "translated_terms" not in st.session_state:
     st.session_state["translated_terms"] = {}
 
-# 2. Input
+# Input
 st.markdown("### 🔍 คำค้น (ไทย)")
 new_keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed")
 
-# 3. ถ้าเปลี่ยน keyword → แปลใหม่ทันที
+# แปลเมื่อมีการเปลี่ยน keyword
 if new_keyword != st.session_state["keyword"]:
     st.session_state["keyword"] = new_keyword
     st.session_state["translated_terms"] = {}
-    for plat in platforms:
-        try:
-            translated_text = translator.translate(new_keyword, dest=plat["lang"]).text
-        except Exception as e:
-            translated_text = f"แปลไม่ได้: {e}"
-        st.session_state["translated_terms"][plat["name"]] = translated_text
+    if new_keyword.strip() != "":
+        for plat in platforms:
+            try:
+                translated_text = translator.translate(new_keyword, dest=plat["lang"]).text
+            except Exception as e:
+                translated_text = f"แปลไม่ได้: {e}"
+            st.session_state["translated_terms"][plat["name"]] = translated_text
 
-# 4. UI per platform
+# UI per platform
 columns = st.columns(2)
 half = len(platforms) // 2
 
