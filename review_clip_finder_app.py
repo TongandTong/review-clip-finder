@@ -59,6 +59,7 @@ with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
     st.markdown("### 🔍 คำค้น (ไทย)")
     keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
+    st.session_state["keyword"] = keyword
     st.markdown("</div>", unsafe_allow_html=True)
 
     if keyword and keyword not in history:
