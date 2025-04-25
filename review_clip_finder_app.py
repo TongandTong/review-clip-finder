@@ -61,7 +61,8 @@ def get_ai_suggestions(keyword):
 def run_search():
     keyword = st.session_state["keyword_input"]
     st.session_state["keyword"] = keyword
-    st.session_state["suggestions"] = get_ai_suggestions(keyword) if keyword else []
+    if not st.session_state["suggestions"]:
+        st.session_state["suggestions"] = get_ai_suggestions(keyword) if keyword else []
 
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
@@ -88,6 +89,7 @@ if st.session_state["suggestions"]:
     for i, suggestion in enumerate(st.session_state["suggestions"]):
         if sugg_cols[i].button(suggestion, key=f"sugg_{i}"):
             st.session_state["keyword_input"] += " " + suggestion
+            st.session_state["suggestions"] = []
             run_search()
             st.experimental_rerun()
 
