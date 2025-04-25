@@ -35,29 +35,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Session state
+# Session state setup
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
-if "just_updated" not in st.session_state:
-    st.session_state["just_updated"] = False
 
-# Input Section
+# Input field
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
     st.markdown("### 🔍 คำค้น (ไทย)")
-    keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
-
-    if keyword != st.session_state["keyword"]:
-        st.session_state["keyword"] = keyword
-        st.session_state["just_updated"] = True
-        st.experimental_rerun()
+    keyword_input = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Reset update flag
-if st.session_state.get("just_updated", False):
-    st.session_state["just_updated"] = False
+# Only update if changed (and not empty)
+if keyword_input.strip() and keyword_input != st.session_state["keyword"]:
+    st.session_state["keyword"] = keyword_input
 
-# Translation
+# Translation logic
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
@@ -67,7 +60,7 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# Display per platform
+# Show platform sections
 columns = st.columns(2)
 half = len(platforms) // 2
 
