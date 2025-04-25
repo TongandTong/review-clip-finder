@@ -67,6 +67,7 @@ for col_idx, start in enumerate([0, half]):
             if i >= len(platforms): break
             plat = platforms[i]
             with st.expander(plat["name"], expanded=False):
+                # ใช้ .get() เพื่อให้ไม่เกิด KeyError
                 default_term = st.session_state["translated_terms"].get(plat["name"], "")
                 search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=default_term, key=f"term_{plat['name']}")
                 col1, col2 = st.columns(2)
