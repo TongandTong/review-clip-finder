@@ -32,19 +32,20 @@ if "translated_terms" not in st.session_state:
 
 # Input
 st.markdown("### 🔍 คำค้น (ไทย)")
-new_keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed")
+keyword = st.text_input("พิมพ์คำค้นหา", value=st.session_state["keyword"], label_visibility="collapsed")
 
-# แปลเมื่อมีการเปลี่ยน keyword
-if new_keyword != st.session_state["keyword"]:
-    st.session_state["keyword"] = new_keyword
-    st.session_state["translated_terms"] = {}
-    if new_keyword.strip() != "":
-        for plat in platforms:
-            try:
-                translated_text = translator.translate(new_keyword, dest=plat["lang"]).text
-            except Exception as e:
-                translated_text = f"แปลไม่ได้: {e}"
-            st.session_state["translated_terms"][plat["name"]] = translated_text
+col_translate, _ = st.columns([1, 5])
+with col_translate:
+    if st.button("แปลคำ"):
+        st.session_state["keyword"] = keyword
+        st.session_state["translated_terms"] = {}
+        if keyword.strip() != "":
+            for plat in platforms:
+                try:
+                    translated_text = translator.translate(keyword, dest=plat["lang"]).text
+                except Exception as e:
+                    translated_text = f"แปลไม่ได้: {e}"
+                st.session_state["translated_terms"][plat["name"]] = translated_text
 
 # UI per platform
 columns = st.columns(2)
