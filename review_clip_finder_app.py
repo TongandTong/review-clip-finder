@@ -1,10 +1,10 @@
-# review_clip_finder_app.py
-
 import streamlit as st
-import csv
 import webbrowser
-from googletrans import Translator
+import csv
 import os
+from googletrans import Translator
+
+st.set_page_config(layout="wide", page_title="Review Clip Finder")
 
 translator = Translator()
 
@@ -26,74 +26,118 @@ platforms = [
 saved_file = "saved_links.csv"
 recent_file = "recent_keywords.txt"
 
-st.set_page_config(layout="wide", page_title="Review Clip Finder")
+def translate_text(text, lang):
+    try:
+        result = translator.translate(text, dest=lang)
+        return result.text
+    except:
+        return text
+
+def save_recent_keyword(keyword):
+    if not keyword.strip():
+        return
+    recent = []
+    if os.path.exists(recent_file):
+        with open(recent_file, "r", encoding="utf-8") as f:
+            recent = [line.strip() for line in f if line.strip()]
+    if keyword in recent:
+        recent.remove(keyword)
+    recent.insert(0, keyword)
+    recent = recent[:5]
+    with open(recent_file, "w", encoding="utf-8") as f:
+        for kw in recent:
+            f.write(kw + "\n")
+
+def get_recent_keywords():
+    if not os.path.exists(recent_file):
+        return []
+    with open(recent_file, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip()]
+
+def save_link(platform, keyword, link):
+    if not link:
+        st.warning("กรุณาวางลิงก์ก่อนบันทึก")
+        return
+    write_header = not os.path.exists(saved_file)
+    with open(saved_file, "a", newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        if write_header:
+            writer.writerow(["แพลตฟอร์ม", "ลิงก์"])
+        writer.writerow([platform, link])
+    st.success(f"บันทึกลิงก์จาก {platform} แล้ว")
+
+def show_saved_links(filter_platform=None):
+    if not os.path.exists(saved_file):
+        st.info("ยังไม่มีข้อมูลที่บันทึกไว้")
+        return
+    with open(saved_file, newline='', encoding='utf-8') as f:
+        reader = list(csv.reader(f))
+        for idx, row in enumerate(reader):
+            if idx == 0 or not row:
+                continue
+            plat, link = row
+            if filter_platform and plat != filter_platform:
+                continue
+            st.markdown(f"**{plat}** | [{link}]({link})")
+            col1, col2 = st.columns(2)
+            if col1.button(f"ลบ {idx}", key=f"del_{idx}"):
+                del reader[idx]
+                with open(saved_file, "w", newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerows(reader)
+                st.rerun()
+            download_url = next((p["download"] for p in platforms if p["name"] == plat), "")
+            if download_url:
+                if col2.button("ไปหน้าโหลด", key=f"dl_{idx}"):
+                    webbrowser.open(download_url)
+
 st.markdown("""
     <style>
-    .platform-card {
-        background-color: #ffffff;
-        padding: 1rem;
-        border-radius: 1rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        margin-bottom: 1rem;
+    .stTextInput > div > input {
+        background-color: #fffbe6;
     }
-    .stTextInput>div>div>input {
-        background-color: #FAFAFA;
-        color: #111827;
+    .stButton > button {
+        background-color: #1f77b4;
+        color: white;
+    }
+    .stButton > button:hover {
+        background-color: #125a8c;
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("📽️ Review Clip Finder")
+st.title("🔍 Review Clip Finder")
+query = st.text_input("คำค้น (ไทย)", "")
+col1, col2, col3 = st.columns([1,1,2])
+use_trans = col1.checkbox("ใช้คำแปล", value=True)
 
-query = st.text_input("🔍 คำค้น (ไทย)", "")
-use_translate = st.checkbox("ค้นหาด้วยคำแปล", value=True)
+if col2.button("แปลทั้งหมด"):
+    save_recent_keyword(query)
 
-if st.button("แปลทั้งหมด"):
-    for p in platforms:
-        lang = p["lang"]
-        try:
-            translated = translator.translate(query, dest=lang).text
-        except Exception as e:
-            translated = f"แปลไม่ได้: {e}"
-        st.session_state[f"translated_{p['name']}"] = translated
+st.markdown("### 🕘 คำค้นล่าสุด")
+recent_keywords = get_recent_keywords()
+st.write(recent_keywords)
 
-cols = st.columns(6)
-for i, platform in enumerate(platforms):
-    with cols[i % 6]:
-        with st.container():
-            st.markdown(f"<div class='platform-card'><h4>{platform['name']}</h4>", unsafe_allow_html=True)
-            key = f"translated_{platform['name']}"
-            default_value = st.session_state.get(key, "")
-            translated = st.text_input(f"คำแปล ({platform['lang']})", value=default_value, key=key)
+left_col, right_col = st.columns(2)
 
-            search_url = platform['search_url'] + (translated if use_translate else query)
-            download_url = platform['download']
-
-            st.link_button("ค้นหา", search_url, use_container_width=True)
-            st.link_button("ไปหน้าโหลด", download_url, use_container_width=True)
-
-            link_key = f"link_{platform['name']}"
-            link_input = st.text_input("ลิงก์วางที่นี่", key=link_key)
-
-            if st.button(f"บันทึกลิงก์จาก {platform['name']}", key=f"save_{platform['name']}"):
-                if not link_input:
-                    st.warning("กรุณาวางลิงก์ก่อนบันทึก")
-                else:
-                    write_header = not os.path.exists(saved_file)
-                    with open(saved_file, "a", newline='', encoding='utf-8') as f:
-                        writer = csv.writer(f)
-                        if write_header:
-                            writer.writerow(["แพลตฟอร์ม", "ลิงก์"])
-                        writer.writerow([platform['name'], link_input])
-                    st.success(f"✅ บันทึกลิงก์จาก {platform['name']} แล้ว")
-
-            st.markdown("</div>", unsafe_allow_html=True)
-
-if st.button("🔗 ดูลิงก์ทั้งหมด"):
-    if not os.path.exists(saved_file):
-        st.info("ยังไม่มีข้อมูลที่บันทึกไว้")
-    else:
-        with open(saved_file, newline='', encoding='utf-8') as f:
-            rows = list(csv.reader(f))
-            for row in rows[1:]:
-                st.write(f"{row[0]} | {row[1]}")
+for idx, platform in enumerate(platforms):
+    target_col = left_col if idx % 2 == 0 else right_col
+    with target_col.container():
+        st.markdown(f"#### {platform['name']}")
+        trans = ""
+        if use_trans:
+            trans = translate_text(query, platform['lang'])
+        else:
+            trans = query
+        st.text_input("คำค้น (แปลแล้ว)", value=trans, key=f"trans_{idx}")
+        c1, c2 = st.columns(2)
+        if c1.button("ค้นหา", key=f"search_{idx}"):
+            url = platform['search_url'] + trans
+            webbrowser.open(url)
+        if c2.button("ไปหน้าโหลด", key=f"download_{idx}"):
+            webbrowser.open(platform['download'])
+        link = st.text_input("วางลิงก์ที่นี่", key=f"link_{idx}")
+        if st.button("บันทึกลิงก์", key=f"save_{idx}"):
+            save_link(platform['name'], query, link)
+        if st.button("ดูลิงก์ที่บันทึกไว้", key=f"view_{idx}"):
+            show_saved_links(platform['name'])
