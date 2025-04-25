@@ -7,8 +7,6 @@ import openai
 
 translator = Translator()
 
-HISTORY_FILE = "search_history.json"
-
 platforms = [
     {"name": "Douyin", "lang": "zh-cn", "search_url": "https://www.douyin.com/search/", "download": "https://savetik.co/en/douyin-downloader"},
     {"name": "Xiaohongshu", "lang": "zh-cn", "search_url": "https://www.xiaohongshu.com/search_result/", "download": "https://bravedown.com/xiaohongshu-downloader"},
@@ -35,15 +33,6 @@ st.markdown("""
     padding: 15px;
     margin-bottom: 20px;
 }
-.suggestion-btn {
-    display: inline-block;
-    background-color: #eee;
-    border: none;
-    border-radius: 10px;
-    padding: 5px 10px;
-    margin: 5px 5px 0 0;
-    cursor: pointer;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -53,8 +42,8 @@ if "keyword" not in st.session_state:
 if "suggestions" not in st.session_state:
     st.session_state["suggestions"] = []
 
-# GPT API Key (replace this with your actual key)
-openai.api_key = os.getenv("OPENAI_API_KEY", "sk-xxx")  # Replace 'sk-xxx' with your key or use environment variable
+# GPT API Key (replace with your actual key or set via env var)
+openai.api_key = os.getenv("OPENAI_API_KEY", "sk-xxx")  # เปลี่ยน "sk-xxx" เป็น API Key ของคุณ
 
 def get_ai_suggestions(keyword):
     try:
@@ -82,6 +71,7 @@ with st.container():
 
     st.session_state["keyword"] = keyword
 
+# แปลคำไปยังภาษาของแต่ละแพลตฟอร์ม
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
@@ -91,17 +81,16 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แสดงปุ่มคำแนะนำเป็นแนวนอน
+# ปุ่มคำแนะนำ (แนวนอน)
 if st.session_state["suggestions"]:
-    st.markdown("<div style='margin-top: -10px;'>", unsafe_allow_html=True)
-    sugg_cols = st.columns(len(st.session_state["suggestions"]))
-    for idx, s in enumerate(st.session_state["suggestions"]):
-        if sugg_cols[idx].button(s, key=f"sugg_{s}"):
-            st.session_state["keyword_input"] += " " + s
+    cols = st.columns(len(st.session_state["suggestions"]))
+    for i, suggestion in enumerate(st.session_state["suggestions"]):
+        if cols[i].button(suggestion, key=f"sugg_{suggestion}"):
+            st.session_state["keyword_input"] += " " + suggestion
             st.session_state["suggestions"] = []
             st.experimental_rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
 
+# UI แสดงแพลตฟอร์ม
 columns = st.columns(2)
 half = len(platforms) // 2
 
@@ -112,8 +101,7 @@ for col_idx, start in enumerate([0, half]):
             plat = platforms[i]
             with st.expander(plat["name"], expanded=False):
                 search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
-
-                col1, col2 = st.columns([1, 1])
+                col1, col2 = st.columns(2)
                 with col1:
                     if st.button("ค้นหา", key=f"search_{plat['name']}"):
                         search_url = plat["search_url"] + search_term
