@@ -49,24 +49,26 @@ st.markdown("""
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
-# แนะนำคำแบบง่าย ๆ
+if "suggestions" not in st.session_state:
+    st.session_state["suggestions"] = []
+
 suggestion_map = {
     "กาแฟ": ["คาเฟ่", "เมล็ดกาแฟ", "ร้านกาแฟ"],
     "กล้อง": ["กล้องถ่ายรูป", "รีวิวกล้อง", "กล้องมือสอง"],
     "เที่ยว": ["สถานที่ท่องเที่ยว", "รีวิวเที่ยว", "จองโรงแรม"]
 }
 
+def on_input_change():
+    st.session_state["suggestions"] = suggestion_map.get(st.session_state["keyword_input"], [])
+
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
     st.markdown("### 🔍 คำค้น (ไทย)")
-    keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
+    keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input", on_change=on_input_change)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    if keyword and keyword != st.session_state["keyword"]:
-        st.session_state["keyword"] = keyword
-        st.experimental_rerun()
+    st.session_state["keyword"] = keyword
 
-# แปลคำค้นทันทีเมื่อพิมพ์
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
@@ -76,13 +78,14 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แสดงปุ่มคำแนะนำ
-suggestions = suggestion_map.get(st.session_state["keyword"], [])
-if suggestions:
+# แสดงปุ่มคำแนะนำเป็นแนวนอน
+if st.session_state["suggestions"]:
     st.markdown("<div style='margin-top: -10px;'>", unsafe_allow_html=True)
-    for s in suggestions:
-        if st.button(s, key=f"sugg_{s}"):
-            st.session_state["keyword"] += " " + s
+    sugg_cols = st.columns(len(st.session_state["suggestions"]))
+    for idx, s in enumerate(st.session_state["suggestions"]):
+        if sugg_cols[idx].button(s, key=f"sugg_{s}"):
+            st.session_state["keyword_input"] += " " + s
+            st.session_state["suggestions"] = []
             st.experimental_rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
