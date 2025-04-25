@@ -24,10 +24,6 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-st.markdown("""
-
-""", unsafe_allow_html=True)
-
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
@@ -35,17 +31,15 @@ st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
 st.markdown("### 🔍 คำค้น (ไทย)")
 
 new_keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed")
-
-if new_keyword != st.session_state["keyword"]:
-    st.session_state["keyword"] = new_keyword
+st.session_state["keyword"] = new_keyword  # อัปเดตทุกครั้งทันที
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 translated_terms = {}
-if st.session_state["keyword"]:
+if new_keyword:
     for plat in platforms:
         try:
-            translated_text = translator.translate(st.session_state["keyword"], dest=plat["lang"]).text
+            translated_text = translator.translate(new_keyword, dest=plat["lang"]).text
         except Exception as e:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
