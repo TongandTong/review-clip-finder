@@ -24,26 +24,28 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
+# 1. Session init
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
+if "translated_terms" not in st.session_state:
+    st.session_state["translated_terms"] = {}
 
-st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
+# 2. Input
 st.markdown("### 🔍 คำค้น (ไทย)")
-
 new_keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed")
-st.session_state["keyword"] = new_keyword  # อัปเดตทุกครั้งทันที
 
-st.markdown("</div>", unsafe_allow_html=True)
-
-translated_terms = {}
-if new_keyword:
+# 3. ถ้าเปลี่ยน keyword → แปลใหม่ทันที
+if new_keyword != st.session_state["keyword"]:
+    st.session_state["keyword"] = new_keyword
+    st.session_state["translated_terms"] = {}
     for plat in platforms:
         try:
             translated_text = translator.translate(new_keyword, dest=plat["lang"]).text
         except Exception as e:
             translated_text = f"แปลไม่ได้: {e}"
-        translated_terms[plat["name"]] = translated_text
+        st.session_state["translated_terms"][plat["name"]] = translated_text
 
+# 4. UI per platform
 columns = st.columns(2)
 half = len(platforms) // 2
 
@@ -53,7 +55,8 @@ for col_idx, start in enumerate([0, half]):
             if i >= len(platforms): break
             plat = platforms[i]
             with st.expander(plat["name"], expanded=False):
-                search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
+                default_term = st.session_state["translated_terms"].get(plat["name"], "")
+                search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=default_term, key=f"term_{plat['name']}")
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("ค้นหา", key=f"search_{plat['name']}"):
