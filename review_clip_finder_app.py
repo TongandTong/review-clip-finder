@@ -35,8 +35,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if "keyword" not in st.session_state:
-    st.session_state["keyword"] = ""
+if keyword != st.session_state["keyword"]:
+    st.session_state["keyword"] = keyword
+    st.experimental_rerun()
 
 keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
 
