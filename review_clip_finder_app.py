@@ -3,6 +3,7 @@ import webbrowser
 from googletrans import Translator
 import json
 import os
+import openai
 
 translator = Translator()
 
@@ -52,14 +53,26 @@ if "keyword" not in st.session_state:
 if "suggestions" not in st.session_state:
     st.session_state["suggestions"] = []
 
-suggestion_map = {
-    "กาแฟ": ["คาเฟ่", "เมล็ดกาแฟ", "ร้านกาแฟ"],
-    "กล้อง": ["กล้องถ่ายรูป", "รีวิวกล้อง", "กล้องมือสอง"],
-    "เที่ยว": ["สถานที่ท่องเที่ยว", "รีวิวเที่ยว", "จองโรงแรม"]
-}
+# GPT API Key (replace this with your actual key)
+openai.api_key = os.getenv("OPENAI_API_KEY", "sk-xxx")  # Replace 'sk-xxx' with your key or use environment variable
+
+def get_ai_suggestions(keyword):
+    try:
+        prompt = f"แนะนำคำค้นเพิ่มเติมที่เกี่ยวข้องกับ '{keyword}' อย่างสั้นๆ 3 คำ"
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=50,
+            temperature=0.7,
+        )
+        suggestions = response['choices'][0]['message']['content'].strip().split(',')
+        return [s.strip() for s in suggestions if s.strip()]
+    except Exception as e:
+        return []
 
 def on_input_change():
-    st.session_state["suggestions"] = suggestion_map.get(st.session_state["keyword_input"], [])
+    keyword = st.session_state["keyword_input"]
+    st.session_state["suggestions"] = get_ai_suggestions(keyword)
 
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
