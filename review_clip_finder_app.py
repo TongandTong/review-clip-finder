@@ -1,6 +1,8 @@
 import streamlit as st
-from googletrans import Translator
 import webbrowser
+from googletrans import Translator
+import json
+import os
 
 translator = Translator()
 
@@ -22,42 +24,32 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-# Session init
+st.markdown("""
+
+""", unsafe_allow_html=True)
+
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
-if "translated_terms" not in st.session_state:
-    st.session_state["translated_terms"] = {}
 
-# Function to clear all data
-def clear_data():
-    st.session_state["keyword"] = ""
-    st.session_state["translated_terms"] = {}
-    st.session_state.clear()  # Clear session state to reset the input fields
-
-def translate_keyword():
-    if st.session_state["keyword"].strip() != "":
-        for plat in platforms:
-            try:
-                translated_text = translator.translate(st.session_state["keyword"], dest=plat["lang"]).text
-            except Exception as e:
-                translated_text = f"แปลไม่ได้: {e}"
-            st.session_state["translated_terms"][plat["name"]] = translated_text
-
-# Input for keyword
+st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
 st.markdown("### 🔍 คำค้น (ไทย)")
-keyword_input = st.text_input("พิมพ์คำค้นหา", value=st.session_state["keyword"], on_change=translate_keyword)
 
-# Add Clear Data button beside Translate button
-col_translate, col_clear = st.columns([1, 1])
-with col_translate:
-    if st.button("แปลคำ"):
-        translate_keyword()
+new_keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed")
 
-with col_clear:
-    if st.button("ล้างข้อมูล"):
-        clear_data()
+if new_keyword != st.session_state["keyword"]:
+    st.session_state["keyword"] = new_keyword
 
-# UI per platform
+st.markdown("</div>", unsafe_allow_html=True)
+
+translated_terms = {}
+if st.session_state["keyword"]:
+    for plat in platforms:
+        try:
+            translated_text = translator.translate(st.session_state["keyword"], dest=plat["lang"]).text
+        except Exception as e:
+            translated_text = f"แปลไม่ได้: {e}"
+        translated_terms[plat["name"]] = translated_text
+
 columns = st.columns(2)
 half = len(platforms) // 2
 
@@ -67,9 +59,7 @@ for col_idx, start in enumerate([0, half]):
             if i >= len(platforms): break
             plat = platforms[i]
             with st.expander(plat["name"], expanded=False):
-                # ใช้ .get() เพื่อให้ไม่เกิด KeyError
-                default_term = st.session_state["translated_terms"].get(plat["name"], "")
-                search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=default_term, key=f"term_{plat['name']}")
+                search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("ค้นหา", key=f"search_{plat['name']}"):
