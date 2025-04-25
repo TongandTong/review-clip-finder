@@ -1,7 +1,5 @@
 import streamlit as st
-import csv
 import webbrowser
-import os
 from googletrans import Translator
 
 translator = Translator()
@@ -18,51 +16,49 @@ platforms = [
     {"name": "Zhihu", "lang": "zh-cn", "search_url": "https://www.zhihu.com/search?q=", "download": "https://www.videofk.com/zhihu-video-download"},
     {"name": "Youku", "lang": "zh-cn", "search_url": "https://so.youku.com/search_video/q_", "download": "https://www.locoloader.com/youku-video-downloader/"},
     {"name": "Dailymotion", "lang": "en", "search_url": "https://www.dailymotion.com/search/", "download": "https://www.savethevideo.com/dailymotion-downloader"},
-    {"name": "X", "lang": "en", "search_url": "https://www.x.com/search?q=", "download": "https://ssstwitter.com/th"}
+    {"name": "X", "lang": "en", "search_url": "https://www.x.com/search?q=", "download": "https://ssstwitter.com/th"},
 ]
 
 st.set_page_config(layout="wide")
-st.title("🔍 Review Clip Finder")
+st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-# ------------------ Input Area ------------------ #
+st.markdown("---")
 with st.container():
-    with st.container():
-        st.markdown("### 📌 คำค้น")
-        search_keyword = st.text_input("กรอกคำค้นหาภาษาไทย", "")
-        if "translations" not in st.session_state:
-            st.session_state.translations = {}
+    st.markdown("### 🔍 คำค้น (ไทย)")
+    keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value="", label_visibility="collapsed")
+    st.markdown("---")
 
-        if st.button("แปลทั้งหมด"):
-            for plat in platforms:
-                lang = plat["lang"]
-                try:
-                    translated = translator.translate(search_keyword, dest=lang).text
-                except Exception as e:
-                    translated = f"[แปลไม่ได้: {e}]"
-                st.session_state.translations[plat["name"]] = translated
-            st.success("แปลสำเร็จแล้ว")
+# เก็บคำแปล
+translated_terms = {}
 
-# ------------------ Platforms Area ------------------ #
-cols = st.columns(2)
-half = len(platforms) // 2 + len(platforms) % 2
+if keyword:
+    for plat in platforms:
+        try:
+            translated_text = translator.translate(keyword, dest=plat["lang"]).text
+        except Exception as e:
+            translated_text = f"แปลไม่ได้: {e}"
+        translated_terms[plat["name"]] = translated_text
 
-for col_idx, plat_list in enumerate([platforms[:half], platforms[half:]]):
-    with cols[col_idx]:
-        for plat in plat_list:
+# สร้าง layout เป็น 2 แถวแนวตั้ง
+columns = st.columns(2)
+half = len(platforms) // 2
+
+for col_idx, start in enumerate([0, half]):
+    with columns[col_idx]:
+        for i in range(start, start + half):
+            if i >= len(platforms): break
+            plat = platforms[i]
             with st.expander(plat["name"], expanded=False):
-                translated_text = st.session_state.translations.get(plat["name"], "")
-                st.write("🔁 คำที่แปล:", translated_text)
+                default_trans = translated_terms.get(plat["name"], "")
+                search_term = st.text_input(f"{plat['name']} term", value=default_trans, key=f"{plat['name']}_term")
 
                 col1, col2 = st.columns([1, 1])
                 with col1:
-                    if st.button(f"ค้นหาใน {plat['name']}", key=f"search_{plat['name']}"):
-                        final_query = translated_text if translated_text else search_keyword
-                        search_url = plat["search_url"] + final_query
-                        js = f"window.open('{search_url}')"
+                    if st.button("ค้นหา", key=f"search_{plat['name']}"):
+                        url = plat["search_url"] + search_term
+                        js = f"window.open('{url}')"  # JavaScript to open in new tab
                         st.components.v1.html(f"<script>{js}</script>", height=0)
-
                 with col2:
-                    if st.button(f"ไปหน้าโหลด {plat['name']}", key=f"download_{plat['name']}"):
-                        download_url = plat["download"]
-                        js = f"window.open('{download_url}')"
+                    if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
+                        js = f"window.open('{plat['download']}')"  # JavaScript to open in new tab
                         st.components.v1.html(f"<script>{js}</script>", height=0)
