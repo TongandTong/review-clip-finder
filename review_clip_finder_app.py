@@ -1,8 +1,6 @@
 import streamlit as st
 import webbrowser
 from googletrans import Translator
-import json
-import os
 
 translator = Translator()
 
@@ -35,15 +33,20 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if keyword != st.session_state["keyword"]:
-    st.session_state["keyword"] = keyword
-    st.experimental_rerun()
+if "keyword" not in st.session_state:
+    st.session_state["keyword"] = ""
 
-keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
+with st.container():
+    st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
+    st.markdown("### 🔍 คำค้น (ไทย)")
 
-# อัปเดตเมื่อมีการเปลี่ยนแปลงคำค้น
-if keyword != st.session_state["keyword"]:
-    st.session_state["keyword"] = keyword
+    keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
+
+    if keyword != st.session_state["keyword"]:
+        st.session_state["keyword"] = keyword
+        st.experimental_rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 translated_terms = {}
 if st.session_state["keyword"]:
@@ -74,4 +77,3 @@ for col_idx, start in enumerate([0, half]):
                     if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
                         js = f"window.open('{plat['download']}')"
                         st.components.v1.html(f"<script>{js}</script>", height=0)
-
