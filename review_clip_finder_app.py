@@ -55,17 +55,25 @@ st.markdown("""
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
+# แนะนำคำแบบง่าย ๆ
+suggestion_map = {
+    "กาแฟ": ["คาเฟ่", "เมล็ดกาแฟ", "ร้านกาแฟ"],
+    "กล้อง": ["กล้องถ่ายรูป", "รีวิวกล้อง", "กล้องมือสอง"],
+    "เที่ยว": ["สถานที่ท่องเที่ยว", "รีวิวเที่ยว", "จองโรงแรม"]
+}
+
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
     st.markdown("### 🔍 คำค้น (ไทย)")
     keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed", key="keyword_input")
-    st.session_state["keyword"] = keyword
     st.markdown("</div>", unsafe_allow_html=True)
 
-    if keyword and keyword not in history:
-        history.insert(0, keyword)
-        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history[:10], f, ensure_ascii=False)
+    if keyword:
+        st.session_state["keyword"] = keyword
+        if keyword not in history:
+            history.insert(0, keyword)
+            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(history[:10], f, ensure_ascii=False)
 
 # แปลคำค้นทันทีเมื่อพิมพ์
 translated_terms = {}
@@ -76,6 +84,14 @@ if st.session_state["keyword"]:
         except Exception as e:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
+
+# แนะนำคำค้นด้านล่าง
+if st.session_state["keyword"] in suggestion_map:
+    suggestions = suggestion_map[st.session_state["keyword"]]
+    selected_suggestion = st.selectbox("คำแนะนำที่เกี่ยวข้อง:", ["เลือกคำแนะนำ"] + suggestions)
+    if selected_suggestion != "เลือกคำแนะนำ":
+        st.session_state["keyword"] = selected_suggestion
+        st.rerun()
 
 columns = st.columns(2)
 half = len(platforms) // 2
@@ -98,3 +114,4 @@ for col_idx, start in enumerate([0, half]):
                     if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
                         js = f"window.open('{plat['download']}')"
                         st.components.v1.html(f"<script>{js}</script>", height=0)
+
