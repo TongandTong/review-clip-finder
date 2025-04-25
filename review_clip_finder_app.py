@@ -1,14 +1,10 @@
 import streamlit as st
+from googletrans import Translator
 import csv
 import os
 import webbrowser
-from googletrans import Translator
 
-st.set_page_config(page_title="Review Clip Finder", layout="wide")
 translator = Translator()
-
-saved_file = "saved_links.csv"
-recent_file = "recent_keywords.txt"
 
 platforms = [
     {"name": "Douyin", "lang": "zh-cn", "search_url": "https://www.douyin.com/search/", "download": "https://savetik.co/en/douyin-downloader"},
@@ -25,91 +21,71 @@ platforms = [
     {"name": "X", "lang": "en", "search_url": "https://www.x.com/search?q=", "download": "https://ssstwitter.com/th"}
 ]
 
+saved_file = "saved_links.csv"
+
 def translate_text(text, lang):
     try:
-        return translator.translate(text, dest=lang).text
+        result = translator.translate(text, dest=lang)
+        return result.text
     except Exception as e:
         return f"แปลไม่ได้: {e}"
 
-def save_link(platform, link):
-    if not link:
-        st.warning("กรุณาวางลิงก์ก่อนบันทึก")
-        return
-    write_header = not os.path.exists(saved_file)
-    with open(saved_file, "a", newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        if write_header:
-            writer.writerow(["แพลตฟอร์ม", "ลิงก์"])
-        writer.writerow([platform, link])
-    st.success(f"บันทึกลิงก์จาก {platform} แล้ว")
+st.set_page_config(page_title="Review Clip Finder", layout="wide")
 
-def get_recent_keywords():
-    if not os.path.exists(recent_file):
-        return []
-    with open(recent_file, "r", encoding="utf-8") as f:
-        return [line.strip() for line in f if line.strip()]
+# --- Custom CSS ---
+st.markdown("""
+    <style>
+        .input-container {
+            border: 1px solid #ccc;
+            padding: 1rem;
+            border-radius: 10px;
+            background-color: #fafafa;
+            margin-bottom: 2rem;
+        }
+        .platform-box {
+            border: 1px solid #ccc;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .stButton>button {
+            margin: 0.2rem 0.2rem 0.2rem 0;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-def save_recent_keyword(keyword):
-    if not keyword.strip():
-        return
-    recent = []
-    if os.path.exists(recent_file):
-        with open(recent_file, "r", encoding="utf-8") as f:
-            recent = [line.strip() for line in f if line.strip()]
-    if keyword in recent:
-        recent.remove(keyword)
-    recent.insert(0, keyword)
-    recent = recent[:5]
-    with open(recent_file, "w", encoding="utf-8") as f:
-        for kw in recent:
-            f.write(kw + "\n")
+# --- Input Section ---
+with st.container():
+    st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    st.markdown("### 🔍 คำค้น (ไทย)")
+    query_text = st.text_input("ใส่คำค้น", key="main_query", label_visibility="collapsed")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-st.title("📹 Review Clip Finder")
-
-query = st.text_input("🔍 คำค้น (ไทย)", "")
-
-col1, col2, col3 = st.columns([1, 1, 2])
-with col1:
-    use_trans = st.checkbox("ค้นหาด้วยคำแปล", value=True)
-with col2:
-    if st.button("แปลทั้งหมด"):
-        save_recent_keyword(query)
-
-with col3:
-    recent = get_recent_keywords()
-    if recent:
-        st.caption("🕘 คำค้นล่าสุด:")
-        st.write(" | ".join(recent))
-
-# แบ่งเป็น 2 คอลัมน์แนวตั้ง
-left_col, right_col = st.columns(2)
+# --- Platform Grid ---
+col1, col2 = st.columns(2)
 
 for i, platform in enumerate(platforms):
-    col = left_col if i % 2 == 0 else right_col
-    with col:
+    with (col1 if i % 2 == 0 else col2):
         with st.container():
-            st.markdown(f"### {platform['name']}")
-            trans = translate_text(query, platform['lang']) if use_trans else query
-            st.text_input("คำค้นแปลแล้ว", trans, key=f"trans_{platform['name']}")
-            if st.button("ค้นหา", key=f"search_{platform['name']}"):
-                search_url = platform["search_url"] + trans
-                st.markdown(f"[🔗 ค้นหาใน {platform['name']}]({search_url})", unsafe_allow_html=True)
-                st.markdown(f'<meta http-equiv="refresh" content="0; url={search_url}">', unsafe_allow_html=True)
-            link = st.text_input("🔗 วางลิงก์", key=f"link_{platform['name']}")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                if st.button("บันทึกลิงก์", key=f"save_{platform['name']}"):
-                    save_link(platform['name'], link)
-            with col2:
-                if st.button("ไปหน้าโหลด", key=f"download_{platform['name']}"):
-                    st.markdown(f"[🔗 ไปที่หน้าโหลด]({platform['download']})", unsafe_allow_html=True)
-                    st.markdown(f'<meta http-equiv="refresh" content="0; url={platform["download"]}">', unsafe_allow_html=True)
-            with col3:
-                if os.path.exists(saved_file):
-                    with open(saved_file, newline='', encoding='utf-8') as f:
-                        rows = list(csv.reader(f))
-                        links = [r[1] for r in rows if len(r) > 1 and r[0] == platform['name']]
-                        if links:
-                            st.caption("🔗 ลิงก์ที่บันทึกไว้:")
-                            for l in links[-3:]:
-                                st.markdown(f"- [{l}]({l})")
+            with st.expander(platform["name"]):
+                st.markdown('<div class="platform-box">', unsafe_allow_html=True)
+
+                lang = platform["lang"]
+                translated_text = translate_text(query_text, lang) if query_text else ""
+                trans_input = st.text_input(f"คำค้นสำหรับ {platform['name']}", value=translated_text, key=f"trans_{i}")
+
+                col_search, col_download = st.columns(2)
+
+                with col_search:
+                    if st.button("🔎 ค้นหา", key=f"search_{i}"):
+                        search_url = platform["search_url"] + trans_input
+                        st.markdown(f"[🔗 เปิดลิงก์ค้นหา]({search_url})", unsafe_allow_html=True)
+
+                with col_download:
+                    if st.button("⬇️ ไปหน้าโหลด", key=f"download_{i}"):
+                        download_url = platform["download"]
+                        st.markdown(f"[🔗 เปิดหน้าโหลด]({download_url})", unsafe_allow_html=True)
+
+                st.markdown('</div>', unsafe_allow_html=True)
