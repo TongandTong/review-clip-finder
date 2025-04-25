@@ -21,6 +21,8 @@ platforms = [
 ]
 
 saved_file = "saved_links.csv"
+recent_file = "recent_keywords.txt"
+
 
 def translate_text(text, lang):
     try:
@@ -29,54 +31,130 @@ def translate_text(text, lang):
     except Exception as e:
         return f"แปลไม่ได้: {e}"
 
+
+def save_recent_keyword(keyword):
+    if not keyword.strip():
+        return
+    recent = []
+    if os.path.exists(recent_file):
+        with open(recent_file, "r", encoding="utf-8") as f:
+            recent = [line.strip() for line in f if line.strip()]
+    if keyword in recent:
+        recent.remove(keyword)
+    recent.insert(0, keyword)
+    recent = recent[:5]
+    with open(recent_file, "w", encoding="utf-8") as f:
+        for kw in recent:
+            f.write(kw + "\n")
+
+
+def get_recent_keywords():
+    if not os.path.exists(recent_file):
+        return []
+    with open(recent_file, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip()]
+
+
 def save_link(platform, keyword, link):
     if not link:
         st.warning("กรุณาวางลิงก์ก่อนบันทึก")
         return
+    write_header = not os.path.exists(saved_file)
     with open(saved_file, "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow([platform, keyword, link])
-    st.success(f"บันทึกข้อมูลจาก {platform} แล้ว")
+        if write_header:
+            writer.writerow(["แพลตฟอร์ม", "ลิงก์"])
+        writer.writerow([platform, link])
+    st.success(f"บันทึกลิงก์จาก {platform} แล้ว")
+
 
 def show_saved_links(filter_platform=None):
     if not os.path.exists(saved_file):
         st.info("ยังไม่มีข้อมูลที่บันทึกไว้")
         return
+
+    def delete_line(index):
+        with open(saved_file, newline='', encoding='utf-8') as f:
+            rows = list(csv.reader(f))
+        if index < len(rows):
+            del rows[index]
+            with open(saved_file, "w", newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerows(rows)
+            st.experimental_rerun()
+
+    st.subheader("ลิงก์ที่บันทึกไว้")
+    saved_links = []
     with open(saved_file, newline='', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        for row in reader:
-            if not row:
+        reader = list(csv.reader(f))
+        for idx, row in enumerate(reader):
+            if idx == 0 or not row:
                 continue
-            plat, keyword, link = row
+            plat, link = row
             if filter_platform and plat != filter_platform:
                 continue
-            st.markdown(f"**{plat}** | _{keyword}_ | [เปิดลิงก์]({link})")
+            saved_links.append((plat, link))
 
-st.title("📹 Review Clip Finder")
-query = st.text_input("🔍 คำค้น (ไทย)", "")
+    if not saved_links:
+        st.info("ยังไม่มีลิงก์บันทึกไว้")
+    for plat, link in saved_links:
+        st.text(f"{plat} | {link}")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button(f"ลบ {plat}", key=f"delete_{plat}"):
+                delete_line(saved_links.index((plat, link)))
+        with col2:
+            download_url = next((p["download"] for p in platforms if p["name"] == plat), "")
+            if download_url:
+                if st.button(f"ไปหน้าโหลด {plat}", key=f"download_{plat}"):
+                    webbrowser.open(download_url)
 
-if st.button("แปลทั้งหมด"):
+
+def search_platform(platform, keyword, use_translation=True):
+    lang = platform['lang']
+    search_term = keyword if not use_translation else translate_text(keyword, lang)
+    url = platform['search_url'] + search_term
+    if use_translation:
+        st.session_state.search_term = search_term
+    webbrowser.open(url)
+
+
+def copy_to_clipboard(text):
+    st.text_area("คัดลอกข้อความนี้:", text, height=50)
+    st.button("คัดลอก", on_click=lambda: st.text(text))
+
+
+def build_gui():
+    st.title("Review Clip Finder")
+    st.subheader("🔍 คำค้น (ไทย)")
+    
+    query_entry = st.text_input("คำค้น (Search Keyword)", "", key="search_query")
+    use_trans_var = st.checkbox("ค้นหาด้วยคำแปล", value=True)
+
+    st.button("แปลทั้งหมด", on_click=lambda: translate_all(query_entry))
+
+    st.subheader("🕘 คำค้นล่าสุด")
+    recent_keywords = get_recent_keywords()
+    for kw in recent_keywords:
+        if st.button(kw):
+            st.session_state.search_query = kw
+
+    platform_widgets = []
     for platform in platforms:
-        lang = platform['lang']
-        translated = translate_text(query, lang)
-        st.session_state[f"trans_{platform['name']}"] = translated
+        col1, col2, col3 = st.columns(3)
 
-cols = st.columns(3)
-for i, platform in enumerate(platforms):
-    with cols[i % 3]:
-        st.subheader(platform['name'])
-        key = f"trans_{platform['name']}"
-        if key not in st.session_state:
-            st.session_state[key] = ""
-        st.session_state[key] = st.text_input("คำแปล", st.session_state[key], key=key)
+        with col1:
+            trans_entry = st.text_input(f"{platform['name']} (แปล)", "", key=f"trans_{platform['name']}")
+        with col2:
+            if st.button(f"ค้นหา {platform['name']}", key=f"search_{platform['name']}"):
+                search_platform(platform, query_entry, use_trans_var)
+        with col3:
+            link_entry = st.text_input(f"{platform['name']} (ลิงก์)", "", key=f"link_{platform['name']}")
+            if st.button(f"บันทึกลิงก์ {platform['name']}", key=f"save_{platform['name']}"):
+                save_link(platform['name'], query_entry, link_entry)
 
-        if st.button(f"ค้นหา - {platform['name']}"):
-            url = platform['search_url'] + st.session_state[key]
-            st.markdown(f"[เปิดการค้นหา]({url})", unsafe_allow_html=True)
+    st.button("ดูลิงก์ที่บันทึกไว้", on_click=lambda: show_saved_links())
 
-        link = st.text_input(f"ลิงก์จาก {platform['name']}", key=f"link_{platform['name']}")
-        if st.button(f"บันทึกลิงก์ - {platform['name']}"):
-            save_link(platform['name'], query, link)
-        if st.button(f"ดูทั้งหมด - {platform['name']}"):
-            show_saved_links(platform['name'])
-        st.markdown(f"[ไปหน้าโหลด]({platform['download']})", unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    build_gui()
