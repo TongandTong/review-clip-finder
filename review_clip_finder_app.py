@@ -22,16 +22,7 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-st.markdown("""
-<style>
-.boxed-section {
-    border: 2px solid #ccc;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-</style>
-""", unsafe_allow_html=True)
+
 
 with st.container():
     st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
