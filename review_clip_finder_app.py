@@ -22,15 +22,24 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("""
+<style>
+.boxed-section {
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 with st.container():
+    st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
     st.markdown("### 🔍 คำค้น (ไทย)")
     keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value="", label_visibility="collapsed")
-    st.markdown("---")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# เก็บคำแปล
 translated_terms = {}
-
 if keyword:
     for plat in platforms:
         try:
@@ -39,7 +48,6 @@ if keyword:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# สร้าง layout เป็น 2 แถวแนวตั้ง
 columns = st.columns(2)
 half = len(platforms) // 2
 
@@ -49,16 +57,14 @@ for col_idx, start in enumerate([0, half]):
             if i >= len(platforms): break
             plat = platforms[i]
             with st.expander(plat["name"], expanded=False):
-                default_trans = translated_terms.get(plat["name"], "")
-                search_term = st.text_input(f"{plat['name']} term", value=default_trans, key=f"{plat['name']}_term")
-
+                search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
                 col1, col2 = st.columns([1, 1])
                 with col1:
                     if st.button("ค้นหา", key=f"search_{plat['name']}"):
-                        url = plat["search_url"] + search_term
-                        js = f"window.open('{url}')"  # JavaScript to open in new tab
+                        search_url = plat["search_url"] + search_term
+                        js = f"window.open('{search_url}')"
                         st.components.v1.html(f"<script>{js}</script>", height=0)
                 with col2:
                     if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
-                        js = f"window.open('{plat['download']}')"  # JavaScript to open in new tab
+                        js = f"window.open('{plat['download']}')"
                         st.components.v1.html(f"<script>{js}</script>", height=0)
