@@ -1,12 +1,12 @@
 import streamlit as st
 import csv
-import os
 import webbrowser
 from googletrans import Translator
+import os
 
 translator = Translator()
 
-PLATFORMS = [
+platforms = [
     {"name": "Douyin", "lang": "zh-cn", "search_url": "https://www.douyin.com/search/", "download": "https://savetik.co/en/douyin-downloader"},
     {"name": "Xiaohongshu", "lang": "zh-cn", "search_url": "https://www.xiaohongshu.com/search_result/", "download": "https://bravedown.com/xiaohongshu-downloader"},
     {"name": "Pinterest", "lang": "en", "search_url": "https://www.pinterest.com/search/pins/?q=", "download": "https://pinterestdownloader.com/"},
@@ -20,101 +20,63 @@ PLATFORMS = [
     {"name": "Dailymotion", "lang": "en", "search_url": "https://www.dailymotion.com/search/", "download": "https://www.savethevideo.com/dailymotion-downloader"}
 ]
 
-SAVED_FILE = "saved_links.csv"
+saved_file = "saved_links.csv"
 
-# --- Utils ---
 def translate_text(text, lang):
     try:
-        return translator.translate(text, dest=lang).text
-    except:
-        return text
+        result = translator.translate(text, dest=lang)
+        return result.text
+    except Exception as e:
+        return f"แปลไม่ได้: {e}"
 
 def save_link(platform, keyword, link):
-    with open(SAVED_FILE, "a", newline='', encoding='utf-8') as f:
+    if not link:
+        st.warning("กรุณาวางลิงก์ก่อนบันทึก")
+        return
+    with open(saved_file, "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow([platform, keyword, link])
+    st.success(f"บันทึกข้อมูลจาก {platform} แล้ว")
 
-def load_saved_links():
-    if not os.path.exists(SAVED_FILE):
-        return []
-    with open(SAVED_FILE, newline='', encoding='utf-8') as f:
+def show_saved_links(filter_platform=None):
+    if not os.path.exists(saved_file):
+        st.info("ยังไม่มีข้อมูลที่บันทึกไว้")
+        return
+    with open(saved_file, newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
-        return [dict(platform=row[0], keyword=row[1], link=row[2]) for row in reader if row]
+        for row in reader:
+            if not row:
+                continue
+            plat, keyword, link = row
+            if filter_platform and plat != filter_platform:
+                continue
+            st.markdown(f"**{plat}** | _{keyword}_ | [เปิดลิงก์]({link})")
 
-def delete_link(index):
-    links = load_saved_links()
-    if index < len(links):
-        links.pop(index)
-        with open(SAVED_FILE, "w", newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            for item in links:
-                writer.writerow([item['platform'], item['keyword'], item['link']])
+st.title("📹 Review Clip Finder")
+query = st.text_input("🔍 คำค้น (ไทย)", "")
 
-# --- UI ---
-st.set_page_config(page_title="Review Clip Finder", layout="centered")
-st.title("📽️ Review Clip Finder")
+if st.button("แปลทั้งหมด"):
+    for platform in platforms:
+        lang = platform['lang']
+        translated = translate_text(query, lang)
+        st.session_state[f"trans_{platform['name']}"] = translated
 
-query = st.text_input("Search Keyword (Thai)", max_chars=100)
-platform_names = [p['name'] for p in PLATFORMS]
-selected_platform_name = st.selectbox("Choose Platform", platform_names)
-selected_platform = next(p for p in PLATFORMS if p['name'] == selected_platform_name)
+cols = st.columns(3)
+for i, platform in enumerate(platforms):
+    with cols[i % 3]:
+        st.subheader(platform['name'])
+        key = f"trans_{platform['name']}"
+        if key not in st.session_state:
+            st.session_state[key] = ""
+        st.session_state[key] = st.text_input("คำแปล", st.session_state[key], key=key)
 
-mode = st.radio("Search Mode", ["Original (Thai)", "Translated"])
+        if st.button(f"ค้นหา - {platform['name']}"):
+            url = platform['search_url'] + st.session_state[key]
+            st.markdown(f"[เปิดการค้นหา]({url})", unsafe_allow_html=True)
 
-if st.button("🔍 Search"):
-    search_term = query
-    if mode == "Translated":
-        search_term = translate_text(query, selected_platform['lang'])
-    search_url = selected_platform['search_url'] + search_term
-    st.markdown(f"[🌐 Open Search Link]({search_url})", unsafe_allow_html=True)
-
-    st.session_state['translated'] = search_term
-
-# Auto-translate but editable
-if 'translated' in st.session_state:
-    edited = st.text_input("Edit Translated (Optional)", value=st.session_state['translated'])
-else:
-    edited = ""
-
-link_input = st.text_input("Paste the Video Link")
-
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("💾 Save Link"):
-        if link_input:
-            save_link(selected_platform_name, edited or query, link_input)
-            st.success("Saved successfully!")
-        else:
-            st.warning("Please paste a link before saving.")
-
-with col2:
-    if st.button("📂 View Saved Links"):
-        st.session_state['show_links'] = True
-
-# --- Saved Links ---
-if st.session_state.get('show_links'):
-    st.subheader("🔗 Saved Links")
-    links = load_saved_links()
-    if not links:
-        st.info("No saved links yet.")
-    else:
-        for i, entry in enumerate(links):
-            st.markdown(f"**Platform:** {entry['platform']}  ")
-            st.markdown(f"**Keyword:** {entry['keyword']}  ")
-            st.markdown(f"**Link:** {entry['link']}  ")
-            search_url = next(p['search_url'] for p in PLATFORMS if p['name'] == entry['platform'])
-            download_url = next(p['download'] for p in PLATFORMS if p['name'] == entry['platform'])
-
-            col1, col2, col3 = st.columns([2,2,1])
-            with col1:
-                st.markdown(f"[🌐 Search Again]({search_url + entry['keyword']})", unsafe_allow_html=True)
-            with col2:
-                st.markdown(f"[⬇️ Go to Download Page]({download_url})", unsafe_allow_html=True)
-            with col3:
-                if st.button("🗑️ Delete", key=f"delete_{i}"):
-                    delete_link(i)
-                    st.rerun()
-
-# --- Footer ---
-st.markdown("---")
-st.markdown("Made with ❤️ to find your review clips faster")
+        link = st.text_input(f"ลิงก์จาก {platform['name']}", key=f"link_{platform['name']}")
+        if st.button(f"บันทึกลิงก์ - {platform['name']}"):
+            save_link(platform['name'], query, link)
+        if st.button(f"ดูทั้งหมด - {platform['name']}"):
+            show_saved_links(platform['name'])
+        st.markdown(f"[ไปหน้าโหลด]({platform['download']})", unsafe_allow_html=True)
