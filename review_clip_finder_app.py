@@ -3,7 +3,14 @@ import streamlit as st
 import csv
 import os
 import webbrowser
-from googletrans import Translator
+from deep_translator import GoogleTranslator
+
+def translate_text(text, lang):
+    try:
+        return GoogleTranslator(source='auto', target=lang).translate(text)
+    except:
+        return text
+
 
 translator = Translator()
 
