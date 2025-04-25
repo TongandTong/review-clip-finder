@@ -1,6 +1,8 @@
 import streamlit as st
 import webbrowser
 from googletrans import Translator
+import json
+import os
 
 translator = Translator()
 
@@ -33,38 +35,28 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# เตรียม session_state
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
-# UI: กล่องกรอกคำค้น
-with st.container():
-    st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
-    st.markdown("### 🔍 คำค้น (ไทย)")
+st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
+st.markdown("### 🔍 คำค้น (ไทย)")
 
-    with st.form(key="search_form"):
-        keyword_input = st.text_input(
-            "พิมพ์คำค้นหาแล้วกด Enter",
-            value=st.session_state["keyword"],
-            label_visibility="collapsed",
-            key="keyword_input"
-        )
-        submitted = st.form_submit_button("🔍")
-        if submitted and keyword_input.strip():
-            st.session_state["keyword"] = keyword_input.strip()
-    st.markdown("</div>", unsafe_allow_html=True)
+new_keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed")
 
-# แปลคำ
+if new_keyword != st.session_state["keyword"]:
+    st.session_state["keyword"] = new_keyword
+
+st.markdown("</div>", unsafe_allow_html=True)
+
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
         try:
-            translated = translator.translate(st.session_state["keyword"], dest=plat["lang"])
-            translated_terms[plat["name"]] = translated.text
+            translated_text = translator.translate(st.session_state["keyword"], dest=plat["lang"]).text
         except Exception as e:
-            translated_terms[plat["name"]] = f"แปลไม่ได้: {e}"
+            translated_text = f"แปลไม่ได้: {e}"
+        translated_terms[plat["name"]] = translated_text
 
-# แสดงผล platform
 columns = st.columns(2)
 half = len(platforms) // 2
 
@@ -74,11 +66,7 @@ for col_idx, start in enumerate([0, half]):
             if i >= len(platforms): break
             plat = platforms[i]
             with st.expander(plat["name"], expanded=False):
-                search_term = st.text_input(
-                    f"คำค้นหา ({plat['name']})",
-                    value=translated_terms.get(plat["name"], ""),
-                    key=f"term_{plat['name']}"
-                )
+                search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("ค้นหา", key=f"search_{plat['name']}"):
