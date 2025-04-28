@@ -75,32 +75,15 @@ if selected_platform:
     # แสดงผลเฉพาะเมื่อกดปุ่ม
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
-    col1, col2 = st.columns(2)
+    
+    # ปรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด" ให้อยู่ตรงกลางและขนาดเท่ากับปุ่มเลือกเวป
+    col1, col2 = st.columns([1, 1])  # ให้ขนาดเท่ากัน
     with col1:
-        if st.button("ค้นหา", key=f"search_{selected_platform['name']}", help="ค้นหาในเว็บไซต์"):
+        if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
             js = f"window.open('{search_url}')"
             st.components.v1.html(f"<script>{js}</script>", height=0)
     with col2:
-        if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", help="ไปที่หน้าดาวน์โหลด"):
+        if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
             js = f"window.open('{selected_platform['download']}')"
             st.components.v1.html(f"<script>{js}</script>", height=0)
-
-# ปรับสไตล์ของปุ่ม
-st.markdown(
-    """
-    <style>
-        .stButton>button {
-            background-color: transparent;
-            border: 1px solid black;
-            color: black;
-            font-size: 14px;
-            padding: 10px;
-            width: 100%;
-        }
-        .stButton>button:hover {
-            background-color: #f0f0f0;
-        }
-    </style>
-    """, unsafe_allow_html=True
-)
