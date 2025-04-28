@@ -19,6 +19,7 @@ platforms = [
     {"name": "Youku", "lang": "zh-cn", "search_url": "https://so.youku.com/search_video/q_", "download": "https://www.locoloader.com/youku-video-downloader/"},
     {"name": "Dailymotion", "lang": "en", "search_url": "https://www.dailymotion.com/search/", "download": "https://www.savethevideo.com/dailymotion-downloader"},
     {"name": "X", "lang": "en", "search_url": "https://www.x.com/search?q=", "download": "https://ssstwitter.com/th"},
+    {"name": "Facebook", "lang": "en", "search_url": "https://www.facebook.com/search/top?q=", "download": "https://fdown.net/"},
 ]
 
 st.set_page_config(layout="wide")
