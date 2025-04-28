@@ -25,6 +25,8 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
+st.markdown(""" """, unsafe_allow_html=True)
+
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
@@ -54,13 +56,14 @@ num_rows = (len(platforms) + num_columns - 1) // num_columns  # คำนวณ�
 # สร้างคอลัมน์ตามจำนวนที่คำนวณ
 columns = st.columns(num_columns)
 
+# ใช้คอลัมน์เพื่อจัดเรียงปุ่มในแถวเดียว
 selected_platform = None
 
 for i in range(num_rows):
-    with st.container():
+    with st.container():  # ใช้ container เพื่อรวมปุ่มในแถวเดียวกัน
         for j in range(num_columns):
             index = i * num_columns + j
-            if index < len(platforms):
+            if index < len(platforms):  # เช็คว่า index อยู่ในขอบเขตของ platforms
                 plat = platforms[index]
                 with columns[j]:
                     if st.button(plat["name"], key=f"button_{plat['name']}", use_container_width=True):
@@ -70,14 +73,13 @@ if selected_platform:
     # แสดงผลเฉพาะเมื่อกดปุ่ม
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
-    
-    # สร้างคอลัมน์สำหรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด"
+
+    # ปรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด" ให้ขนาดเท่ากับปุ่มเลือกเวป
     col1, col2 = st.columns([1, 1])  # ให้ขนาดเท่ากัน
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
-            # ใช้ Streamlit เปิดลิงก์ในแท็บใหม่
-            st.experimental_javascript(f"window.open('{search_url}', '_blank');")
+            st.experimental_javascript(f"window.open('{search_url}', '_blank');", height=0)
     with col2:
         if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
-            st.experimental_javascript(f"window.open('{selected_platform['download']}', '_blank');")
+            st.experimental_javascript(f"window.open('{selected_platform['download']}', '_blank');", height=0)
