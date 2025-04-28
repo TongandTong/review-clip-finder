@@ -25,10 +25,6 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-st.markdown("""
-
-""", unsafe_allow_html=True)
-
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
@@ -58,17 +54,15 @@ num_rows = (len(platforms) + num_columns - 1) // num_columns  # คำนวณ�
 # สร้างคอลัมน์ตามจำนวนที่คำนวณ
 columns = st.columns(num_columns)
 
-# ใช้คอลัมน์เพื่อจัดเรียงปุ่มในแถวเดียว
 selected_platform = None
 
 for i in range(num_rows):
-    with st.container():  # ใช้ container เพื่อรวมปุ่มในแถวเดียวกัน
+    with st.container():
         for j in range(num_columns):
             index = i * num_columns + j
-            if index < len(platforms):  # เช็คว่า index อยู่ในขอบเขตของ platforms
+            if index < len(platforms):
                 plat = platforms[index]
                 with columns[j]:
-                    # ปรับขนาดปุ่มให้เท่ากันทุกปุ่ม
                     if st.button(plat["name"], key=f"button_{plat['name']}", use_container_width=True):
                         selected_platform = plat
 
@@ -77,14 +71,15 @@ if selected_platform:
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
     
-    # ปรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด" ให้ขนาดเท่ากับปุ่มเลือกเวป
+    # สร้างคอลัมน์สำหรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด"
     col1, col2 = st.columns([1, 1])  # ให้ขนาดเท่ากัน
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
-            js = f"window.open('{search_url}')"
+            # ใช้ JavaScript เพื่อเปิดแท็บใหม่
+            js = f"window.open('{search_url}', '_blank')"
             st.components.v1.html(f"<script>{js}</script>", height=0)
     with col2:
         if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
-            js = f"window.open('{selected_platform['download']}')"
+            js = f"window.open('{selected_platform['download']}', '_blank')"
             st.components.v1.html(f"<script>{js}</script>", height=0)
