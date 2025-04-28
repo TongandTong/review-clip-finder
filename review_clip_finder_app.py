@@ -1,10 +1,10 @@
 import streamlit as st
-import webbrowser
-from googletrans import Translator
+from google.cloud import translate_v2 as translate
 import json
 import os
 
-translator = Translator()
+# ตั้งค่า Google Cloud Translation API
+translate_client = translate.Client()
 
 platforms = [
     {"name": "Douyin", "lang": "zh-cn", "search_url": "https://www.douyin.com/search/", "download": "https://savetik.co/en/douyin-downloader"},
@@ -24,13 +24,11 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-st.markdown("""
-
-""", unsafe_allow_html=True)
-
+# เก็บค่า keyword ใน session state
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
+# ฟอร์มให้กรอกคำค้น
 st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
 st.markdown("### 🔍 คำค้น (ไทย)")
 
@@ -41,15 +39,21 @@ if new_keyword != st.session_state["keyword"]:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
+# เลือกภาษาสำหรับแปล
+language = st.selectbox("เลือกภาษา", ["en", "th", "zh-cn", "es", "fr"])
+
+# แปลคำค้นหา
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
         try:
-            translated_text = translator.translate(st.session_state["keyword"], dest=plat["lang"]).text
+            # ใช้ Google Cloud Translation API
+            translated_text = translate_client.translate(st.session_state["keyword"], target_language=plat["lang"]).get('translatedText')
         except Exception as e:
-            translated_text = f"แปลไม่ได้: {e}"
+            translated_text = f"ไม่สามารถแปลคำค้นหาได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
+# แสดงผลลัพธ์การค้นหา
 columns = st.columns(2)
 half = len(platforms) // 2
 
@@ -64,9 +68,7 @@ for col_idx, start in enumerate([0, half]):
                 with col1:
                     if st.button("ค้นหา", key=f"search_{plat['name']}"):
                         search_url = plat["search_url"] + search_term
-                        js = f"window.open('{search_url}')"
-                        st.components.v1.html(f"<script>{js}</script>", height=0)
+                        st.markdown(f"[ค้นหา {plat['name']}]({search_url})", unsafe_allow_html=True)
                 with col2:
                     if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
-                        js = f"window.open('{plat['download']}')"
-                        st.components.v1.html(f"<script>{js}</script>", height=0)
+                        st.markdown(f"[ไปที่หน้าโหลด {plat['name']}]({plat['download']})", unsafe_allow_html=True)
