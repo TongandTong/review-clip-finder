@@ -1,8 +1,5 @@
 import streamlit as st
-import webbrowser
 from googletrans import Translator
-import json
-import os
 
 translator = Translator()
 
@@ -25,20 +22,13 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-st.markdown("""""", unsafe_allow_html=True)
-
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
-
-st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
-st.markdown("### 🔍 คำค้น (ไทย)")
 
 new_keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed")
 
 if new_keyword != st.session_state["keyword"]:
     st.session_state["keyword"] = new_keyword
-
-st.markdown("</div>", unsafe_allow_html=True)
 
 translated_terms = {}
 if st.session_state["keyword"]:
@@ -50,32 +40,28 @@ if st.session_state["keyword"]:
         translated_terms[plat["name"]] = translated_text
 
 # การจัดเรียงปุ่มให้มีขนาดเท่ากันและอยู่ใน 2 แถว
-num_columns = 7  # กำหนดจำนวนคอลัมน์ในแต่ละแถว
-num_rows = (len(platforms) + num_columns - 1) // num_columns  # คำนวณจำนวนแถว
-
-# สร้างคอลัมน์ตามจำนวนที่คำนวณ
+num_columns = 7
+num_rows = (len(platforms) + num_columns - 1) // num_columns
 columns = st.columns(num_columns)
 
-# ใช้คอลัมน์เพื่อจัดเรียงปุ่มในแถวเดียว
 selected_platform = None
 
 for i in range(num_rows):
-    with st.container():  # ใช้ container เพื่อรวมปุ่มในแถวเดียวกัน
+    with st.container():
         for j in range(num_columns):
             index = i * num_columns + j
-            if index < len(platforms):  # เช็คว่า index อยู่ในขอบเขตของ platforms
+            if index < len(platforms):
                 plat = platforms[index]
                 with columns[j]:
                     if st.button(plat["name"], key=f"button_{plat['name']}", use_container_width=True):
                         selected_platform = plat
 
 if selected_platform:
-    # แสดงผลเฉพาะเมื่อกดปุ่ม
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
 
     # ปรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด" ให้ขนาดเท่ากับปุ่มเลือกเวป
-    col1, col2 = st.columns([1, 1])  # ให้ขนาดเท่ากัน
+    col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
