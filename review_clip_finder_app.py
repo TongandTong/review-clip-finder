@@ -51,12 +51,17 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แสดงปุ่มกดสำหรับแต่ละแพลตฟอร์ม
+# แสดงปุ่มกดตามแนวนอน
+col_count = len(platforms)
+columns = st.columns(col_count)
+
+# ใช้คอลัมน์เพื่อจัดเรียงปุ่มในแถวเดียว
 selected_platform = None
 
-for plat in platforms:
-    if st.button(plat["name"], key=f"button_{plat['name']}"):
-        selected_platform = plat
+for idx, plat in enumerate(platforms):
+    with columns[idx]:
+        if st.button(plat["name"], key=f"button_{plat['name']}"):
+            selected_platform = plat
 
 if selected_platform:
     # แสดงผลเฉพาะเมื่อกดปุ่ม
