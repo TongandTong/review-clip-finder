@@ -69,17 +69,7 @@ for i in range(num_rows):
                 plat = platforms[index]
                 with columns[j]:
                     # ปรับขนาดปุ่มให้เท่ากันทุกปุ่ม
-                    button_style = """
-                        <style>
-                            .stButton > button {
-                                width: 100%;
-                                height: 100px;
-                                font-size: 14px;
-                            }
-                        </style>
-                    """
-                    st.markdown(button_style, unsafe_allow_html=True)
-                    if st.button(plat["name"], key=f"button_{plat['name']}"):
+                    if st.button(plat["name"], key=f"button_{plat['name']}", use_container_width=True):
                         selected_platform = plat
 
 if selected_platform:
