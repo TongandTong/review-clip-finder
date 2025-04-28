@@ -51,29 +51,24 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# ใช้ st.columns() เพื่อให้ Checkbox เรียงตามแนวนอน
-col_count = len(platforms)
-cols = st.columns(col_count)
+# แสดงปุ่มกดสำหรับแต่ละแพลตฟอร์ม
+selected_platform = None
 
-selected_platforms = []
-for idx, plat in enumerate(platforms):
-    with cols[idx]:
-        # ใช้ st.markdown กับการใส่ขนาดตัวอักษรเล็กลง
-        st.markdown(f"<span style='font-size: 12px;'>{plat['name']}</span>", unsafe_allow_html=True)
-        if st.checkbox("", key=f"checkbox_{plat['name']}"):
-            selected_platforms.append(plat)
+for plat in platforms:
+    if st.button(plat["name"], key=f"button_{plat['name']}"):
+        selected_platform = plat
 
-# แสดงแพลตฟอร์มที่เลือกในแถวเดียว
-for plat in selected_platforms:
-    with st.expander(plat["name"], expanded=False):
-        search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("ค้นหา", key=f"search_{plat['name']}"):
-                search_url = plat["search_url"] + search_term
-                js = f"window.open('{search_url}')"
-                st.components.v1.html(f"<script>{js}</script>", height=0)
-        with col2:
-            if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
-                js = f"window.open('{plat['download']}')"
-                st.components.v1.html(f"<script>{js}</script>", height=0)
+if selected_platform:
+    # แสดงผลเฉพาะเมื่อกดปุ่ม
+    st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
+    search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("ค้นหา", key=f"search_{selected_platform['name']}"):
+            search_url = selected_platform["search_url"] + search_term
+            js = f"window.open('{search_url}')"
+            st.components.v1.html(f"<script>{js}</script>", height=0)
+    with col2:
+        if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}"):
+            js = f"window.open('{selected_platform['download']}')"
+            st.components.v1.html(f"<script>{js}</script>", height=0)
