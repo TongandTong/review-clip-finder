@@ -75,36 +75,44 @@ if selected_platform:
     # แสดงผลเฉพาะเมื่อกดปุ่ม
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
-    col1, col2 = st.columns(2)
     
+    # ใช้ container เพื่อจัดปุ่มให้อยู่กลางหน้า
+    col1, col2 = st.columns([1, 1])  # กำหนดความกว้างของคอลัมน์ให้เท่ากัน
+
     with col1:
         search_url = selected_platform["search_url"] + search_term
-        # ใช้สไตล์ CSS เพื่อให้ลิงก์ดูเหมือนปุ่ม
+        # ปรับสไตล์ของปุ่มให้เรียบง่ายและตั้งกลาง
         st.markdown(f"""
-        <a href="{search_url}" target="_blank" style="
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            text-align: center;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 14px;
-        ">ค้นหาบน {selected_platform['name']}</a>
+        <div style="text-align: center;">
+            <a href="{search_url}" target="_blank" style="
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: transparent;
+                color: #007bff;
+                text-align: center;
+                border-radius: 5px;
+                text-decoration: none;
+                font-size: 14px;
+                border: 2px solid #007bff;
+            ">ค้นหาบน {selected_platform['name']}</a>
+        </div>
         """, unsafe_allow_html=True)
     
     with col2:
         download_url = selected_platform["download"]
-        # ใช้สไตล์ CSS เพื่อให้ลิงก์ดูเหมือนปุ่ม
+        # ปรับสไตล์ของปุ่มให้เรียบง่ายและตั้งกลาง
         st.markdown(f"""
-        <a href="{download_url}" target="_blank" style="
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            text-align: center;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 14px;
-        ">ไปหน้าโหลด {selected_platform['name']}</a>
+        <div style="text-align: center;">
+            <a href="{download_url}" target="_blank" style="
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: transparent;
+                color: #28a745;
+                text-align: center;
+                border-radius: 5px;
+                text-decoration: none;
+                font-size: 14px;
+                border: 2px solid #28a745;
+            ">ไปหน้าโหลด {selected_platform['name']}</a>
+        </div>
         """, unsafe_allow_html=True)
