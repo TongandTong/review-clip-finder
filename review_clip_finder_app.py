@@ -1,10 +1,10 @@
 import streamlit as st
-from google.cloud import translate_v2 as translate
+import webbrowser
+from googletrans import Translator
 import json
 import os
 
-# ตั้งค่า Google Cloud Translation API
-translate_client = translate.Client()
+translator = Translator()
 
 platforms = [
     {"name": "Douyin", "lang": "zh-cn", "search_url": "https://www.douyin.com/search/", "download": "https://savetik.co/en/douyin-downloader"},
@@ -19,17 +19,18 @@ platforms = [
     {"name": "Youku", "lang": "zh-cn", "search_url": "https://so.youku.com/search_video/q_", "download": "https://www.locoloader.com/youku-video-downloader/"},
     {"name": "Dailymotion", "lang": "en", "search_url": "https://www.dailymotion.com/search/", "download": "https://www.savethevideo.com/dailymotion-downloader"},
     {"name": "X", "lang": "en", "search_url": "https://www.x.com/search?q=", "download": "https://ssstwitter.com/th"},
-    {"name": "Facebook", "lang": "en", "search_url": "https://www.facebook.com/search/top?q=", "download": "https://fdown.net/"},
 ]
 
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-# เก็บค่า keyword ใน session state
+st.markdown("""
+
+""", unsafe_allow_html=True)
+
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
-# ฟอร์มให้กรอกคำค้น
 st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
 st.markdown("### 🔍 คำค้น (ไทย)")
 
@@ -40,21 +41,15 @@ if new_keyword != st.session_state["keyword"]:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# เลือกภาษาสำหรับแปล
-language = st.selectbox("เลือกภาษา", ["en", "th", "zh-cn", "es", "fr"])
-
-# แปลคำค้นหา
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
         try:
-            # ใช้ Google Cloud Translation API
-            translated_text = translate_client.translate(st.session_state["keyword"], target_language=plat["lang"]).get('translatedText')
+            translated_text = translator.translate(st.session_state["keyword"], dest=plat["lang"]).text
         except Exception as e:
-            translated_text = f"ไม่สามารถแปลคำค้นหาได้: {e}"
+            translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แสดงผลลัพธ์การค้นหา
 columns = st.columns(2)
 half = len(platforms) // 2
 
@@ -69,7 +64,9 @@ for col_idx, start in enumerate([0, half]):
                 with col1:
                     if st.button("ค้นหา", key=f"search_{plat['name']}"):
                         search_url = plat["search_url"] + search_term
-                        st.markdown(f"[ค้นหา {plat['name']}]({search_url})", unsafe_allow_html=True)
+                        js = f"window.open('{search_url}')"
+                        st.components.v1.html(f"<script>{js}</script>", height=0)
                 with col2:
                     if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
-                        st.markdown(f"[ไปที่หน้าโหลด {plat['name']}]({plat['download']})", unsafe_allow_html=True)
+                        js = f"window.open('{plat['download']}')"
+                        st.components.v1.html(f"<script>{js}</script>", height=0)
