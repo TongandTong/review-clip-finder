@@ -65,9 +65,9 @@ if selected_platform:
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
-            # ใช้ st.markdown สำหรับเปิดลิงก์ในแท็บใหม่
-            st.markdown(f'<a href="{search_url}" target="_blank">เปิดหน้าค้นหา {selected_platform["name"]}</a>', unsafe_allow_html=True)
+            # ใช้ HTML ง่ายๆ สำหรับเปิดลิงก์ในแท็บใหม่
+            st.markdown(f'<a href="{search_url}" target="_blank">ไปที่หน้าค้นหา {selected_platform["name"]}</a>', unsafe_allow_html=True)
     with col2:
         if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
-            # ใช้ st.markdown สำหรับเปิดลิงก์ในแท็บใหม่
-            st.markdown(f'<a href="{selected_platform["download"]}" target="_blank">ไปหน้าโหลด {selected_platform["name"]}</a>', unsafe_allow_html=True)
+            # ใช้ HTML ง่ายๆ สำหรับเปิดลิงก์ในแท็บใหม่
+            st.markdown(f'<a href="{selected_platform["download"]}" target="_blank">ไปที่หน้าโหลด {selected_platform["name"]}</a>', unsafe_allow_html=True)
