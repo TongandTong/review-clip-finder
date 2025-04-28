@@ -46,6 +46,7 @@ columns = st.columns(num_columns)
 
 selected_platform = None
 
+# การเลือกแพลตฟอร์ม
 for i in range(num_rows):
     with st.container():
         for j in range(num_columns):
@@ -56,6 +57,7 @@ for i in range(num_rows):
                     if st.button(plat["name"], key=f"button_{plat['name']}", use_container_width=True):
                         selected_platform = plat
 
+# แสดงผลหลังจากเลือกแพลตฟอร์ม
 if selected_platform:
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
