@@ -73,15 +73,15 @@ if selected_platform:
     # แสดงผลเฉพาะเมื่อกดปุ่ม
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
-    
+
     # ปรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด" ให้ขนาดเท่ากับปุ่มเลือกเวป
     col1, col2 = st.columns([1, 1])  # ให้ขนาดเท่ากัน
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
-            js = f"window.open('{search_url}', '_blank')"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
+            # แก้ไขเพื่อให้เปิด URL ในแท็บใหม่
+            st.markdown(f"<a href='{search_url}' target='_blank'>เปิดหน้าค้นหา</a>", unsafe_allow_html=True)
     with col2:
         if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
-            js = f"window.open('{selected_platform['download']}', '_blank')"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
+            # แก้ไขเพื่อให้เปิด URL ในแท็บใหม่
+            st.markdown(f"<a href='{selected_platform['download']}' target='_blank'>ไปยังหน้าโหลด</a>", unsafe_allow_html=True)
