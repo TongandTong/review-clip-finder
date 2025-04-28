@@ -1,5 +1,6 @@
 import streamlit as st
 from googletrans import Translator
+import webbrowser
 
 translator = Translator()
 
@@ -61,7 +62,7 @@ for i in range(num_rows):
                     st.session_state["translated_search"] = translated_terms.get(plat["name"], "")
 
 # โชว์ปุ่ม "ค้นหา" และ "ไปหน้าโหลด" เมื่อเลือกแพลตฟอร์ม
-if "selected_platform" in st.session_state:
+if st.session_state.get("selected_platform") is not None:
     selected_platform = st.session_state["selected_platform"]
     translated_search = st.session_state.get("translated_search", "")
 
@@ -73,20 +74,8 @@ if "selected_platform" in st.session_state:
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(
-            f"""
-            <a href="{search_url}" target="_blank">
-                <button style="width:100%;padding:12px;background-color:#4CAF50;color:white;border:none;border-radius:8px;font-size:18px;">ค้นหา</button>
-            </a>
-            """,
-            unsafe_allow_html=True,
-        )
+        if st.button("ค้นหา", key="search_button", use_container_width=True):
+            st.markdown(f'<meta http-equiv="refresh" content="0;URL={search_url}">', unsafe_allow_html=True)
     with col2:
-        st.markdown(
-            f"""
-            <a href="{download_url}" target="_blank">
-                <button style="width:100%;padding:12px;background-color:#2196F3;color:white;border:none;border-radius:8px;font-size:18px;">ไปหน้าโหลด</button>
-            </a>
-            """,
-            unsafe_allow_html=True,
-        )
+        if st.button("ไปหน้าโหลด", key="download_button", use_container_width=True):
+            st.markdown(f'<meta http-equiv="refresh" content="0;URL={download_url}">', unsafe_allow_html=True)
