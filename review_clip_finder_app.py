@@ -51,17 +51,25 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# ปรับเรียงปุ่มให้เป็นแถวเดียวกัน
-col_count = len(platforms)
-columns = st.columns(col_count)
+# การจัดเรียงปุ่มให้มีขนาดเท่ากันและอยู่ใน 2 แถว
+num_columns = 4  # กำหนดจำนวนคอลัมน์ในแต่ละแถว
+num_rows = (len(platforms) + num_columns - 1) // num_columns  # คำนวณจำนวนแถว
+
+# สร้างคอลัมน์ตามจำนวนที่คำนวณ
+columns = st.columns(num_columns)
 
 # ใช้คอลัมน์เพื่อจัดเรียงปุ่มในแถวเดียว
 selected_platform = None
 
-for idx, plat in enumerate(platforms):
-    with columns[idx]:
-        if st.button(plat["name"], key=f"button_{plat['name']}"):
-            selected_platform = plat
+for i in range(num_rows):
+    with st.container():  # ใช้ container เพื่อรวมปุ่มในแถวเดียวกัน
+        for j in range(num_columns):
+            index = i * num_columns + j
+            if index < len(platforms):  # เช็คว่า index อยู่ในขอบเขตของ platforms
+                plat = platforms[index]
+                with columns[j]:
+                    if st.button(plat["name"], key=f"button_{plat['name']}"):
+                        selected_platform = plat
 
 if selected_platform:
     # แสดงผลเฉพาะเมื่อกดปุ่ม
