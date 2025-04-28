@@ -1,4 +1,5 @@
 import streamlit as st
+import webbrowser
 from googletrans import Translator
 import json
 import os
@@ -50,7 +51,7 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# การจัดเรียงปุ่มให้มีขนาดเท่ากัน
+# การจัดเรียงปุ่มให้มีขนาดเท่ากันและอยู่ใน 2 แถว
 num_columns = 7  # กำหนดจำนวนคอลัมน์ในแต่ละแถว
 num_rows = (len(platforms) + num_columns - 1) // num_columns  # คำนวณจำนวนแถว
 
@@ -67,6 +68,39 @@ for i in range(num_rows):
             if index < len(platforms):  # เช็คว่า index อยู่ในขอบเขตของ platforms
                 plat = platforms[index]
                 with columns[j]:
-                    # ปรับปุ่มให้ไม่มีสีพื้นหลังและขนาดเท่ากัน
-                    st.button(plat["name"], key=f"button_{plat['name']}", help=plat["name"], use_container_width=True)
+                    if st.button(plat["name"], key=f"button_{plat['name']}"):
+                        selected_platform = plat
 
+if selected_platform:
+    # แสดงผลเฉพาะเมื่อกดปุ่ม
+    st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
+    search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("ค้นหา", key=f"search_{selected_platform['name']}", help="ค้นหาในเว็บไซต์"):
+            search_url = selected_platform["search_url"] + search_term
+            js = f"window.open('{search_url}')"
+            st.components.v1.html(f"<script>{js}</script>", height=0)
+    with col2:
+        if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", help="ไปที่หน้าดาวน์โหลด"):
+            js = f"window.open('{selected_platform['download']}')"
+            st.components.v1.html(f"<script>{js}</script>", height=0)
+
+# ปรับสไตล์ของปุ่ม
+st.markdown(
+    """
+    <style>
+        .stButton>button {
+            background-color: transparent;
+            border: 1px solid black;
+            color: black;
+            font-size: 14px;
+            padding: 10px;
+            width: 100%;
+        }
+        .stButton>button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+    """, unsafe_allow_html=True
+)
