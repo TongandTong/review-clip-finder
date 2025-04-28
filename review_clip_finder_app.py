@@ -58,8 +58,9 @@ cols = st.columns(col_count)
 selected_platforms = []
 for idx, plat in enumerate(platforms):
     with cols[idx]:
-        # ปรับขนาดข้อความให้เล็กลงและลบคำว่า "แสดง"
-        if st.checkbox(f"<span style='font-size: 12px;'>{plat['name']}</span>", key=f"checkbox_{plat['name']}", unsafe_allow_html=True):
+        # ใช้ st.markdown กับการใส่ขนาดตัวอักษรเล็กลง
+        st.markdown(f"<span style='font-size: 12px;'>{plat['name']}</span>", unsafe_allow_html=True)
+        if st.checkbox("", key=f"checkbox_{plat['name']}"):
             selected_platforms.append(plat)
 
 # แสดงแพลตฟอร์มที่เลือกในแถวเดียว
