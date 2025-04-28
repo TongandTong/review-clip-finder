@@ -1,5 +1,8 @@
 import streamlit as st
+import webbrowser
 from googletrans import Translator
+import json
+import os
 
 translator = Translator()
 
@@ -21,6 +24,8 @@ platforms = [
 
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
+
+st.markdown("""""", unsafe_allow_html=True)
 
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
@@ -68,16 +73,15 @@ if selected_platform:
     # แสดงผลเฉพาะเมื่อกดปุ่ม
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
-
+    
     # ปรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด" ให้ขนาดเท่ากับปุ่มเลือกเวป
     col1, col2 = st.columns([1, 1])  # ให้ขนาดเท่ากัน
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
-            # ใช้ st.components.v1.html สำหรับเปิดลิงก์ในแท็บใหม่
-            st.components.v1.html(f"<script>window.open('{search_url}', '_blank');</script>", height=0)
+            js = f"window.open('{search_url}', '_blank')"
+            st.components.v1.html(f"<script>{js}</script>", height=0)
     with col2:
         if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
-            download_url = selected_platform['download']
-            # ใช้ st.components.v1.html สำหรับเปิดลิงก์ในแท็บใหม่
-            st.components.v1.html(f"<script>window.open('{download_url}', '_blank');</script>", height=0)
+            js = f"window.open('{selected_platform['download']}', '_blank')"
+            st.components.v1.html(f"<script>{js}</script>", height=0)
