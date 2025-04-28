@@ -50,7 +50,7 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# การจัดเรียงปุ่มให้มีขนาดเท่ากันและอยู่ใน 2 แถว
+# การจัดเรียงปุ่มให้มีขนาดเท่ากัน
 num_columns = 7  # กำหนดจำนวนคอลัมน์ในแต่ละแถว
 num_rows = (len(platforms) + num_columns - 1) // num_columns  # คำนวณจำนวนแถว
 
@@ -67,7 +67,7 @@ for i in range(num_rows):
             if index < len(platforms):  # เช็คว่า index อยู่ในขอบเขตของ platforms
                 plat = platforms[index]
                 with columns[j]:
-                    button = st.button(plat["name"], key=f"button_{plat['name']}")
+                    button = st.button(plat["name"], key=f"button_{plat['name']}", help=plat["name"])
                     if button:
                         selected_platform = plat
 
@@ -81,12 +81,13 @@ if selected_platform:
 
     with col1:
         search_url = selected_platform["search_url"] + search_term
-        # ปรับสไตล์ของปุ่มให้เรียบง่ายและตั้งกลาง
+        # ปรับสไตล์ของปุ่มให้เรียบง่ายและขนาดเท่ากัน
         st.markdown(f"""
         <div style="text-align: center;">
             <a href="{search_url}" target="_blank" style="
                 display: inline-block;
-                padding: 10px 20px;
+                width: 100%;
+                padding: 10px;
                 background-color: transparent;
                 color: #007bff;
                 text-align: center;
@@ -94,18 +95,20 @@ if selected_platform:
                 text-decoration: none;
                 font-size: 14px;
                 border: 2px solid #007bff;
+                box-sizing: border-box;
             ">ค้นหาบน {selected_platform['name']}</a>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         download_url = selected_platform["download"]
-        # ปรับสไตล์ของปุ่มให้เรียบง่ายและตั้งกลาง
+        # ปรับสไตล์ของปุ่มให้เรียบง่ายและขนาดเท่ากัน
         st.markdown(f"""
         <div style="text-align: center;">
             <a href="{download_url}" target="_blank" style="
                 display: inline-block;
-                padding: 10px 20px;
+                width: 100%;
+                padding: 10px;
                 background-color: transparent;
                 color: #28a745;
                 text-align: center;
@@ -113,6 +116,7 @@ if selected_platform:
                 text-decoration: none;
                 font-size: 14px;
                 border: 2px solid #28a745;
+                box-sizing: border-box;
             ">ไปหน้าโหลด {selected_platform['name']}</a>
         </div>
         """, unsafe_allow_html=True)
