@@ -51,7 +51,7 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แสดงปุ่มกดตามแนวนอน
+# ปรับเรียงปุ่มให้เป็นแถวเดียวกัน
 col_count = len(platforms)
 columns = st.columns(col_count)
 
