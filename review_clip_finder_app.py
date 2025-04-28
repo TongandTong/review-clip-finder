@@ -45,7 +45,7 @@ if st.session_state["keyword"]:
         translated_terms[plat["name"]] = translated_text
 
 # การจัดเรียงปุ่มให้มีขนาดเท่ากันและอยู่ในหลายแถว
-num_columns = 4
+num_columns = 2
 num_rows = (len(platforms) + num_columns - 1) // num_columns
 columns = st.columns(num_columns)
 
