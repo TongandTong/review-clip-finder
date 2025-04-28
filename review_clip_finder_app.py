@@ -3,6 +3,7 @@ from googletrans import Translator
 
 translator = Translator()
 
+# รายการแพลตฟอร์ม
 platforms = [
     {"name": "FaceBook", "lang": "en", "search_url": "https://www.facebook.com/search/top/?q=", "download": "https://fdown.net/"},
     {"name": "Douyin", "lang": "zh-cn", "search_url": "https://www.douyin.com/search/", "download": "https://savetik.co/en/douyin-downloader"},
@@ -22,18 +23,16 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
+# เก็บ keyword
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
-if "selected_platform" not in st.session_state:
-    st.session_state["selected_platform"] = None
 
-# ช่องรับคำค้นหา
 new_keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", value=st.session_state["keyword"], label_visibility="collapsed")
 
 if new_keyword != st.session_state["keyword"]:
     st.session_state["keyword"] = new_keyword
 
-# แปลคำ
+# แปล keyword ไปหลายภาษา
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
@@ -43,35 +42,51 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# === ปุ่มเลือกแพลตฟอร์ม จัด 2 แถว ===
+# แสดงปุ่มแพลตฟอร์ม
 num_columns = 7
+num_rows = 2
 columns = st.columns(num_columns)
 
-# แถวที่ 1 (7 ปุ่มแรก)
-for i in range(7):
-    with columns[i]:
-        if st.button(platforms[i]["name"], key=f"button_{platforms[i]['name']}", use_container_width=True):
-            st.session_state["selected_platform"] = platforms[i]
+selected_platform = None
 
-# แถวที่ 2 (6 ปุ่มที่เหลือ)
-columns = st.columns(6)
-for i in range(6):
-    with columns[i]:
-        if st.button(platforms[i + 7]["name"], key=f"button_{platforms[i + 7]['name']}", use_container_width=True):
-            st.session_state["selected_platform"] = platforms[i + 7]
+for i in range(num_rows):
+    for j in range(num_columns):
+        index = i * num_columns + j
+        if index < len(platforms):
+            plat = platforms[index]
+            with columns[j]:
+                if st.button(plat["name"], key=f"button_{plat['name']}", use_container_width=True):
+                    selected_platform = plat
+                    st.session_state["selected_platform"] = plat
+                    st.session_state["translated_search"] = translated_terms.get(plat["name"], "")
 
-# ==== หลังจากเลือกแพลตฟอร์ม ====
-if st.session_state["selected_platform"]:
+# โชว์ปุ่ม "ค้นหา" และ "ไปหน้าโหลด" เมื่อเลือกแพลตฟอร์ม
+if "selected_platform" in st.session_state:
     selected_platform = st.session_state["selected_platform"]
-    st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
+    translated_search = st.session_state.get("translated_search", "")
 
-    search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
+    st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
+    search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_search, key=f"term_{selected_platform['name']}")
+
+    search_url = selected_platform["search_url"] + search_term
+    download_url = selected_platform["download"]
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
-            search_url = selected_platform["search_url"] + search_term
-            st.markdown(f'<a href="{search_url}" target="_blank">เปิดหน้าค้นหา {selected_platform["name"]}</a>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <a href="{search_url}" target="_blank">
+                <button style="width:100%;padding:12px;background-color:#4CAF50;color:white;border:none;border-radius:8px;font-size:18px;">ค้นหา</button>
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
     with col2:
-        if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
-            st.markdown(f'<a href="{selected_platform["download"]}" target="_blank">ไปหน้าโหลด {selected_platform["name"]}</a>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <a href="{download_url}" target="_blank">
+                <button style="width:100%;padding:12px;background-color:#2196F3;color:white;border:none;border-radius:8px;font-size:18px;">ไปหน้าโหลด</button>
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
