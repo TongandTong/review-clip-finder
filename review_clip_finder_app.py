@@ -67,6 +67,7 @@ for i in range(num_rows):
             if index < len(platforms):  # เช็คว่า index อยู่ในขอบเขตของ platforms
                 plat = platforms[index]
                 with columns[j]:
+                    # ปรับปุ่มให้ไม่มีสีพื้นหลังและขนาดเท่ากัน
                     button = st.button(plat["name"], key=f"button_{plat['name']}", help=plat["name"])
                     if button:
                         selected_platform = plat
@@ -75,13 +76,13 @@ if selected_platform:
     # แสดงผลเฉพาะเมื่อกดปุ่ม
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
-    
+
     # ใช้ container เพื่อจัดปุ่มให้อยู่กลางหน้า
     col1, col2 = st.columns([1, 1])  # กำหนดความกว้างของคอลัมน์ให้เท่ากัน
 
     with col1:
         search_url = selected_platform["search_url"] + search_term
-        # ปรับสไตล์ของปุ่มให้เรียบง่ายและขนาดเท่ากัน
+        # ปรับสไตล์ของปุ่ม "ค้นหา" ให้ไม่มีกรอบและพื้นหลัง
         st.markdown(f"""
         <div style="text-align: center;">
             <a href="{search_url}" target="_blank" style="
@@ -89,12 +90,12 @@ if selected_platform:
                 width: 100%;
                 padding: 10px;
                 background-color: transparent;
-                color: #007bff;
+                color: inherit;
                 text-align: center;
                 border-radius: 5px;
                 text-decoration: none;
                 font-size: 14px;
-                border: 2px solid #007bff;
+                border: none;
                 box-sizing: border-box;
             ">ค้นหาบน {selected_platform['name']}</a>
         </div>
@@ -102,7 +103,7 @@ if selected_platform:
     
     with col2:
         download_url = selected_platform["download"]
-        # ปรับสไตล์ของปุ่มให้เรียบง่ายและขนาดเท่ากัน
+        # ปรับสไตล์ของปุ่ม "ไปหน้าโหลด" ให้ไม่มีกรอบและพื้นหลัง
         st.markdown(f"""
         <div style="text-align: center;">
             <a href="{download_url}" target="_blank" style="
@@ -110,12 +111,12 @@ if selected_platform:
                 width: 100%;
                 padding: 10px;
                 background-color: transparent;
-                color: #28a745;
+                color: inherit;
                 text-align: center;
                 border-radius: 5px;
                 text-decoration: none;
                 font-size: 14px;
-                border: 2px solid #28a745;
+                border: none;
                 box-sizing: border-box;
             ">ไปหน้าโหลด {selected_platform['name']}</a>
         </div>
