@@ -76,10 +76,8 @@ if selected_platform:
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
-            # ใช้ JavaScript เพื่อเปิดแท็บใหม่
-            js = f"window.open('{search_url}', '_blank')"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
+            # ใช้ Streamlit เปิดลิงก์ในแท็บใหม่
+            st.experimental_javascript(f"window.open('{search_url}', '_blank');")
     with col2:
         if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
-            js = f"window.open('{selected_platform['download']}', '_blank')"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
+            st.experimental_javascript(f"window.open('{selected_platform['download']}', '_blank');")
