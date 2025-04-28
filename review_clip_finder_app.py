@@ -51,8 +51,14 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แสดงแพลตฟอร์มในแถวเดียว
+# เลือกแพลตฟอร์มที่ต้องการแสดง
+selected_platforms = []
 for plat in platforms:
+    if st.checkbox(f"แสดง {plat['name']}", key=f"checkbox_{plat['name']}"):
+        selected_platforms.append(plat)
+
+# แสดงแพลตฟอร์มที่เลือกในแถวเดียว
+for plat in selected_platforms:
     with st.expander(plat["name"], expanded=False):
         search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
         col1, col2 = st.columns(2)
