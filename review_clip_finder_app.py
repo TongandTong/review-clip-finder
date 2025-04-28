@@ -73,3 +73,17 @@ for col_idx, start in enumerate([0, half]):
                 with col2:
                     if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
                         st.markdown(f"[ไปที่หน้าโหลด {plat['name']}]({plat['download']})", unsafe_allow_html=True)
+
+# เพิ่มส่วนของ Facebook ด้านล่างซ้าย
+st.markdown("<div style='display: flex; justify-content: flex-start;'>", unsafe_allow_html=True)
+with st.expander("Facebook", expanded=False):
+    search_term_facebook = st.text_input("คำค้นหา (Facebook)", value=translated_terms.get("Facebook", ""), key="term_Facebook")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("ค้นหา Facebook"):
+            search_url_facebook = "https://www.facebook.com/search/top?q=" + search_term_facebook
+            st.markdown(f"[ค้นหา Facebook]({search_url_facebook})", unsafe_allow_html=True)
+    with col2:
+        if st.button("ไปหน้าโหลด Facebook"):
+            st.markdown("[ไปที่หน้าโหลด Facebook](https://fdown.net/)", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
