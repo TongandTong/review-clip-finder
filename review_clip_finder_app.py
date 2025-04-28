@@ -76,7 +76,7 @@ if selected_platform:
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
     
-    # ปรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด" ให้อยู่ตรงกลางและขนาดเท่ากับปุ่มเลือกเวป
+    # ปรับปุ่ม "ค้นหา" และ "ไปหน้าโหลด" ให้ขนาดเท่ากับปุ่มเลือกเวป
     col1, col2 = st.columns([1, 1])  # ให้ขนาดเท่ากัน
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
