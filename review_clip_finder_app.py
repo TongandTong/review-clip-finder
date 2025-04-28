@@ -1,11 +1,18 @@
 import streamlit as st
 from google.cloud import translate_v2 as translate
-import json
-import os
 
 # ตั้งค่า Google Cloud Translation API
 translate_client = translate.Client()
 
+def translate_text(text, target_language):
+    """แปลข้อความโดยใช้ Google Cloud Translation API"""
+    try:
+        translation = translate_client.translate(text, target_language=target_language)
+        return translation['translatedText']
+    except Exception as e:
+        return f"Error: {e}"
+
+# รายชื่อแพลตฟอร์มและข้อมูลที่เกี่ยวข้อง
 platforms = [
     {"name": "Douyin", "lang": "zh-cn", "search_url": "https://www.douyin.com/search/", "download": "https://savetik.co/en/douyin-downloader"},
     {"name": "Xiaohongshu", "lang": "zh-cn", "search_url": "https://www.xiaohongshu.com/search_result/", "download": "https://bravedown.com/xiaohongshu-downloader"},
@@ -22,6 +29,7 @@ platforms = [
     {"name": "Facebook", "lang": "en", "search_url": "https://www.facebook.com/search/top?q=", "download": "https://fdown.net/"},
 ]
 
+# ตั้งค่าหน้าต่างของ Streamlit
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
@@ -48,8 +56,8 @@ translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
         try:
-            # ใช้ Google Cloud Translation API
-            translated_text = translate_client.translate(st.session_state["keyword"], target_language=plat["lang"]).get('translatedText')
+            # ใช้ Google Cloud Translation API เพื่อแปล
+            translated_text = translate_text(st.session_state["keyword"], plat["lang"])
         except Exception as e:
             translated_text = f"ไม่สามารถแปลคำค้นหาได้: {e}"
         translated_terms[plat["name"]] = translated_text
@@ -73,17 +81,3 @@ for col_idx, start in enumerate([0, half]):
                 with col2:
                     if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
                         st.markdown(f"[ไปที่หน้าโหลด {plat['name']}]({plat['download']})", unsafe_allow_html=True)
-
-# เพิ่มส่วนของ Facebook ด้านล่างซ้าย
-st.markdown("<div style='display: flex; justify-content: flex-start;'>", unsafe_allow_html=True)
-with st.expander("Facebook", expanded=False):
-    search_term_facebook = st.text_input("คำค้นหา (Facebook)", value=translated_terms.get("Facebook", ""), key="term_Facebook")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("ค้นหา Facebook"):
-            search_url_facebook = "https://www.facebook.com/search/top?q=" + search_term_facebook
-            st.markdown(f"[ค้นหา Facebook]({search_url_facebook})", unsafe_allow_html=True)
-    with col2:
-        if st.button("ไปหน้าโหลด Facebook"):
-            st.markdown("[ไปที่หน้าโหลด Facebook](https://fdown.net/)", unsafe_allow_html=True)
-st.markdown("</div>", unsafe_allow_html=True)
