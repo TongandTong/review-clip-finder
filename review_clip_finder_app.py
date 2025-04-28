@@ -51,11 +51,15 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# เลือกแพลตฟอร์มที่ต้องการแสดง
+# ใช้ st.columns() เพื่อให้ Checkbox เรียงตามแนวนอน
+col_count = len(platforms)
+cols = st.columns(col_count)
+
 selected_platforms = []
-for plat in platforms:
-    if st.checkbox(f"แสดง {plat['name']}", key=f"checkbox_{plat['name']}"):
-        selected_platforms.append(plat)
+for idx, plat in enumerate(platforms):
+    with cols[idx]:
+        if st.checkbox(f"แสดง {plat['name']}", key=f"checkbox_{plat['name']}"):
+            selected_platforms.append(plat)
 
 # แสดงแพลตฟอร์มที่เลือกในแถวเดียว
 for plat in selected_platforms:
