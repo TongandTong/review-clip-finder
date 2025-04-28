@@ -78,11 +78,10 @@ if selected_platform:
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("ค้นหา", key=f"search_{selected_platform['name']}"):
-            search_url = selected_platform["search_url"] + search_term
-            js = f"window.open('{search_url}')"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
+        # แก้ไขการเปิด URL โดยใช้ markdown แทน JavaScript
+        search_url = selected_platform["search_url"] + search_term
+        st.markdown(f"[ค้นหาบน {selected_platform['name']}]({search_url})", unsafe_allow_html=True)
     with col2:
-        if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}"):
-            js = f"window.open('{selected_platform['download']}')"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
+        # แก้ไขการเปิด URL โดยใช้ markdown แทน JavaScript
+        download_url = selected_platform["download"]
+        st.markdown(f"[ไปหน้าโหลด {selected_platform['name']}]({download_url})", unsafe_allow_html=True)
