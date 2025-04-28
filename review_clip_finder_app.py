@@ -1,4 +1,5 @@
 import streamlit as st
+import webbrowser
 from googletrans import Translator
 import json
 import os
@@ -23,11 +24,13 @@ platforms = [
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-# ใช้ session_state เพื่อเก็บคำค้นล่าสุด
+st.markdown("""
+
+""", unsafe_allow_html=True)
+
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
-# แสดงช่องกรอกคำค้น
 st.markdown("<div class='boxed-section'>", unsafe_allow_html=True)
 st.markdown("### 🔍 คำค้น (ไทย)")
 
@@ -36,16 +39,10 @@ new_keyword = st.text_input("พิมพ์คำค้นหาแล้วก
 if new_keyword != st.session_state["keyword"]:
     st.session_state["keyword"] = new_keyword
 
-# ปุ่มลบคำค้น
-if st.button("ลบคำค้น"):
-    st.session_state["keyword"] = ""
-    new_keyword = ""
-
 st.markdown("</div>", unsafe_allow_html=True)
 
-# แปลคำค้นในกรณีที่มีการกรอกคำค้น
+translated_terms = {}
 if st.session_state["keyword"]:
-    translated_terms = {}
     for plat in platforms:
         try:
             translated_text = translator.translate(st.session_state["keyword"], dest=plat["lang"]).text
@@ -53,23 +50,17 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-    columns = st.columns(2)
-    half = len(platforms) // 2
-
-    for col_idx, start in enumerate([0, half]):
-        with columns[col_idx]:
-            for i in range(start, start + half):
-                if i >= len(platforms): break
-                plat = platforms[i]
-                with st.expander(plat["name"], expanded=False):
-                    search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button("ค้นหา", key=f"search_{plat['name']}"):
-                            search_url = plat["search_url"] + search_term
-                            js = f"window.open('{search_url}', '_blank')"
-                            st.components.v1.html(f"<script>{js}</script>", height=0)
-                    with col2:
-                        if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
-                            js = f"window.open('{plat['download']}', '_blank')"
-                            st.components.v1.html(f"<script>{js}</script>", height=0)
+# แสดงแพลตฟอร์มในแถวเดียว
+for plat in platforms:
+    with st.expander(plat["name"], expanded=False):
+        search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("ค้นหา", key=f"search_{plat['name']}"):
+                search_url = plat["search_url"] + search_term
+                js = f"window.open('{search_url}')"
+                st.components.v1.html(f"<script>{js}</script>", height=0)
+        with col2:
+            if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}"):
+                js = f"window.open('{plat['download']}')"
+                st.components.v1.html(f"<script>{js}</script>", height=0)
