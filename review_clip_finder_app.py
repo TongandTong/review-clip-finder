@@ -1,5 +1,4 @@
 import streamlit as st
-import webbrowser
 from googletrans import Translator
 import json
 import os
@@ -77,11 +76,35 @@ if selected_platform:
     st.markdown(f"### แพลตฟอร์มที่เลือก: {selected_platform['name']}")
     search_term = st.text_input(f"คำค้นหา ({selected_platform['name']})", value=translated_terms.get(selected_platform["name"], ""), key=f"term_{selected_platform['name']}")
     col1, col2 = st.columns(2)
+    
     with col1:
-        # แก้ไขการเปิด URL โดยใช้ markdown แทน JavaScript
         search_url = selected_platform["search_url"] + search_term
-        st.markdown(f"[ค้นหาบน {selected_platform['name']}]({search_url})", unsafe_allow_html=True)
+        # ใช้สไตล์ CSS เพื่อให้ลิงก์ดูเหมือนปุ่ม
+        st.markdown(f"""
+        <a href="{search_url}" target="_blank" style="
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        ">ค้นหาบน {selected_platform['name']}</a>
+        """, unsafe_allow_html=True)
+    
     with col2:
-        # แก้ไขการเปิด URL โดยใช้ markdown แทน JavaScript
         download_url = selected_platform["download"]
-        st.markdown(f"[ไปหน้าโหลด {selected_platform['name']}]({download_url})", unsafe_allow_html=True)
+        # ใช้สไตล์ CSS เพื่อให้ลิงก์ดูเหมือนปุ่ม
+        st.markdown(f"""
+        <a href="{download_url}" target="_blank" style="
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        ">ไปหน้าโหลด {selected_platform['name']}</a>
+        """, unsafe_allow_html=True)
