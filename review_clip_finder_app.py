@@ -68,7 +68,8 @@ for i in range(num_rows):
             if index < len(platforms):  # เช็คว่า index อยู่ในขอบเขตของ platforms
                 plat = platforms[index]
                 with columns[j]:
-                    if st.button(plat["name"], key=f"button_{plat['name']}"):
+                    button = st.button(plat["name"], key=f"button_{plat['name']}")
+                    if button:
                         selected_platform = plat
 
 if selected_platform:
