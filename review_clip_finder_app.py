@@ -1,8 +1,5 @@
 import streamlit as st
-import webbrowser
 from googletrans import Translator
-import json
-import os
 
 translator = Translator()
 
@@ -24,8 +21,6 @@ platforms = [
 
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
-
-st.markdown(""" """, unsafe_allow_html=True)
 
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
@@ -79,7 +74,10 @@ if selected_platform:
     with col1:
         if st.button("ค้นหา", key=f"search_{selected_platform['name']}", use_container_width=True):
             search_url = selected_platform["search_url"] + search_term
-            st.experimental_javascript(f"window.open('{search_url}', '_blank');", height=0)
+            # ใช้ st.components.v1.html สำหรับเปิดลิงก์ในแท็บใหม่
+            st.components.v1.html(f"<script>window.open('{search_url}', '_blank');</script>", height=0)
     with col2:
         if st.button("ไปหน้าโหลด", key=f"dl_{selected_platform['name']}", use_container_width=True):
-            st.experimental_javascript(f"window.open('{selected_platform['download']}', '_blank');", height=0)
+            download_url = selected_platform['download']
+            # ใช้ st.components.v1.html สำหรับเปิดลิงก์ในแท็บใหม่
+            st.components.v1.html(f"<script>window.open('{download_url}', '_blank');</script>", height=0)
