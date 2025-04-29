@@ -22,39 +22,37 @@ platforms = sorted([
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-# รับคำค้นหลักจากผู้ใช้
-keyword = st.text_input("พิมพ์คำค้นหาแล้วกด Enter", "", label_visibility="collapsed")
+keyword = st.text_input("🔍 พิมพ์คำค้นหาหลัก แล้วกด Enter", value="", label_visibility="visible")
 
-# แปลคำค้นเป็นภาษาที่แพลตฟอร์มนั้นใช้
 translated_terms = {}
 if keyword:
     for plat in platforms:
         try:
             translated = translator.translate(keyword, dest=plat["lang"]).text
         except Exception as e:
-            translated = keyword
+            translated = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated
 
-# แบ่งคอลัมน์
+# แสดงเป็น 2 คอลัมน์แนวตั้ง
 left_col, right_col = st.columns(2)
 
-for i, plat in enumerate(platforms):
-    col = left_col if i % 2 == 0 else right_col
-    with col:
+for idx, plat in enumerate(platforms):
+    container = left_col if idx % 2 == 0 else right_col
+    with container:
         with st.container(border=True):
-            st.markdown(f"#### {plat['name']}")
-            search_term = translated_terms.get(plat["name"], "")
-            user_input = st.text_input(f"คำค้นหา ({plat['name']})", value=search_term, key=f"input_{plat['name']}")
-
-            c1, c2 = st.columns(2)
-            with c1:
-                search_url = plat["search_url"] + user_input
+            st.markdown(f"### {plat['name']}")
+            search_term = translated_terms.get(plat["name"], "") if keyword else ""
+            search_input = st.text_input(f"คำค้นหา ({plat['name']})", value=search_term, key=f"input_{plat['name']}")
+            col1, col2 = st.columns(2)
+            with col1:
+                search_url = plat["search_url"] + search_input
                 st.markdown(
-                    f'<a href="{search_url}" target="_blank"><button style="width: 100%;">ค้นหา</button></a>',
+                    f'<a href="{search_url}" target="_blank"><button style="width:100%;padding:0.5em;border:none;background:#f0f2f6;border-radius:4px;">ค้นหา</button></a>',
                     unsafe_allow_html=True
                 )
-            with c2:
+            with col2:
+                download_url = plat["download"]
                 st.markdown(
-                    f'<a href="{plat["download"]}" target="_blank"><button style="width: 100%;">ไปหน้าโหลด</button></a>',
+                    f'<a href="{download_url}" target="_blank"><button style="width:100%;padding:0.5em;border:none;background:#f0f2f6;border-radius:4px;">ไปหน้าโหลด</button></a>',
                     unsafe_allow_html=True
                 )
