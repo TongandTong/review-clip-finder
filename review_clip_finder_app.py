@@ -1,6 +1,5 @@
 import streamlit as st
 from googletrans import Translator
-import webbrowser
 
 translator = Translator()
 
@@ -43,7 +42,7 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แสดงปุ่มแพลตฟอร์ม
+# แสดงปุ่มแพลตฟอร์มเป็น 2 แถว ขนาดเท่ากัน
 num_columns = 7
 num_rows = 2
 columns = st.columns(num_columns)
@@ -61,7 +60,7 @@ for i in range(num_rows):
                     st.session_state["selected_platform"] = plat
                     st.session_state["translated_search"] = translated_terms.get(plat["name"], "")
 
-# โชว์ปุ่ม "ค้นหา" และ "ไปหน้าโหลด" เมื่อเลือกแพลตฟอร์ม
+# แสดงปุ่มค้นหาและดาวน์โหลดเมื่อเลือกแพลตฟอร์ม
 if st.session_state.get("selected_platform") is not None:
     selected_platform = st.session_state["selected_platform"]
     translated_search = st.session_state.get("translated_search", "")
@@ -74,8 +73,14 @@ if st.session_state.get("selected_platform") is not None:
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("ค้นหา", key="search_button", use_container_width=True):
-            st.markdown(f'<meta http-equiv="refresh" content="0;URL={search_url}">', unsafe_allow_html=True)
+        st.markdown(
+            f'<a href="{search_url}" target="_blank" style="text-decoration: none;">'
+            f'<button style="width: 100%; padding: 0.75em; font-size: 1em;">ค้นหา</button></a>',
+            unsafe_allow_html=True
+        )
     with col2:
-        if st.button("ไปหน้าโหลด", key="download_button", use_container_width=True):
-            st.markdown(f'<meta http-equiv="refresh" content="0;URL={download_url}">', unsafe_allow_html=True)
+        st.markdown(
+            f'<a href="{download_url}" target="_blank" style="text-decoration: none;">'
+            f'<button style="width: 100%; padding: 0.75em; font-size: 1em;">ไปหน้าโหลด</button></a>',
+            unsafe_allow_html=True
+        )
