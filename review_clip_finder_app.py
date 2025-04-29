@@ -1,13 +1,12 @@
 import streamlit as st
 from googletrans import Translator
 
-# กำหนดค่าหน้า
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
 translator = Translator()
 
-# รายชื่อแพลตฟอร์ม (เรียงตามตัวอักษร)
+# รายชื่อแพลตฟอร์มเรียงตามตัวอักษร
 platforms = sorted([
     {"name": "Bilibili", "lang": "zh-cn", "search_url": "https://search.bilibili.com/all?keyword=", "download": "https://bravedown.com/th/bilibili-downloader"},
     {"name": "Dailymotion", "lang": "en", "search_url": "https://www.dailymotion.com/search/", "download": "https://www.savethevideo.com/dailymotion-downloader"},
@@ -24,30 +23,27 @@ platforms = sorted([
     {"name": "Zhihu", "lang": "zh-cn", "search_url": "https://www.zhihu.com/search?q=", "download": "https://www.videofk.com/zhihu-video-download"},
 ], key=lambda x: x["name"])
 
-# รับคำค้นหาหลัก
-keyword = st.text_input("พิมพ์คำค้นหา", "")
+# ช่องกรอกคำค้นหลัก
+keyword = st.text_input("พิมพ์คำค้นหาหลัก", "")
 
-# แปลคำค้นหาไปภาษาของแต่ละแพลตฟอร์ม
+# แปลคำสำหรับแต่ละแพลตฟอร์ม
 translated_terms = {}
 if keyword:
     for plat in platforms:
         try:
             translated_text = translator.translate(keyword, dest=plat["lang"]).text
         except Exception as e:
-            translated_text = f"แปลไม่ได้: {e}"
+            translated_text = keyword
         translated_terms[plat["name"]] = translated_text
 
-# แสดงแพลตฟอร์มทั้งหมด
+# แสดงแพลตฟอร์มทั้งหมดพร้อมช่องและปุ่ม
 for plat in platforms:
     with st.container():
+        st.markdown("---")
         st.markdown(f"### 🔎 {plat['name']}")
 
-        default_term = translated_terms.get(plat["name"], "")
-        search_term = st.text_input(
-            f"คำค้นหา ({plat['name']})",
-            value=default_term,
-            key=f"term_{plat['name']}"
-        )
+        search_term = translated_terms.get(plat["name"], "")
+        search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=search_term, key=f"input_{plat['name']}")
 
         col1, col2 = st.columns(2)
         with col1:
