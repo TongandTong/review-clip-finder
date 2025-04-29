@@ -18,12 +18,12 @@ platforms = sorted([
     {"name": "Youku", "lang": "zh-cn", "search_url": "https://so.youku.com/search_video/q_", "download": "https://www.locoloader.com/youku-video-downloader/"},
     {"name": "Dailymotion", "lang": "en", "search_url": "https://www.dailymotion.com/search/", "download": "https://www.savethevideo.com/dailymotion-downloader"},
     {"name": "X", "lang": "en", "search_url": "https://www.x.com/search?q=", "download": "https://ssstwitter.com/th"},
-], key=lambda x: x["name"].lower())
+], key=lambda x: x["name"])  # เรียงตามตัวอักษร
 
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>🎬 Review Clip Finder</h1>", unsafe_allow_html=True)
 
-# คำค้นหา
+# เก็บ keyword
 if "keyword" not in st.session_state:
     st.session_state["keyword"] = ""
 
@@ -32,7 +32,7 @@ new_keyword = st.text_input("พิมพ์คำค้นหาแล้วก
 if new_keyword != st.session_state["keyword"]:
     st.session_state["keyword"] = new_keyword
 
-# แปลคำค้นหา
+# แปล keyword ไปหลายภาษา
 translated_terms = {}
 if st.session_state["keyword"]:
     for plat in platforms:
@@ -42,28 +42,28 @@ if st.session_state["keyword"]:
             translated_text = f"แปลไม่ได้: {e}"
         translated_terms[plat["name"]] = translated_text
 
-# แสดงทุกแพลตฟอร์มใน 2 คอลัมน์แนวตั้ง
+# แบ่ง 2 คอลัมน์แนวตั้ง
 col1, col2 = st.columns(2)
+half = (len(platforms) + 1) // 2
+platform_cols = [platforms[:half], platforms[half:]]
 
-for i, plat in enumerate(platforms):
-    col = col1 if i % 2 == 0 else col2
+for col, plat_list in zip([col1, col2], platform_cols):
     with col:
-        with st.container():
-            st.markdown(f"#### {plat['name']}")
-            st.write("---")
-            search_term = st.text_input(f"คำค้นหา ({plat['name']})", value=translated_terms.get(plat["name"], ""), key=f"term_{plat['name']}")
+        for plat in plat_list:
+            with st.container():
+                st.markdown(f"""<div style="border:1px solid #CCC; padding:15px; border-radius:10px; margin-bottom:15px;">
+                    <h4>{plat["name"]}</h4>
+                """, unsafe_allow_html=True)
 
-            c1, c2 = st.columns(2)
-            with c1:
-                if st.button("ค้นหา", key=f"search_{plat['name']}", use_container_width=True):
-                    st.markdown(
-                        f'<meta http-equiv="refresh" content="0;URL={plat["search_url"] + search_term}">', 
-                        unsafe_allow_html=True
-                    )
-            with c2:
-                if st.button("ไปหน้าโหลด", key=f"dl_{plat['name']}", use_container_width=True):
-                    st.markdown(
-                        f'<meta http-equiv="refresh" content="0;URL={plat["download"]}">', 
-                        unsafe_allow_html=True
-                    )
-            st.markdown("---")
+                search_term = translated_terms.get(plat["name"], "")
+                search_input = st.text_input(f"คำค้นหา ({plat['name']})", value=search_term, key=f"term_{plat['name']}")
+
+                btn1, btn2 = st.columns(2)
+                with btn1:
+                    if st.button("ค้นหา", key=f"search_{plat['name']}", use_container_width=True):
+                        st.markdown(f'<meta http-equiv="refresh" content="0;URL={plat["search_url"] + search_input}">', unsafe_allow_html=True)
+                with btn2:
+                    if st.button("ไปหน้าโหลด", key=f"download_{plat['name']}", use_container_width=True):
+                        st.markdown(f'<meta http-equiv="refresh" content="0;URL={plat["download"]}">', unsafe_allow_html=True)
+
+                st.markdown("</div>", unsafe_allow_html=True)
